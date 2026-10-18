@@ -1,0 +1,13 @@
+{
+  "name": "textsigns-glyphs",
+  "private": true,
+  "description": "Generates TextSigns glyph textures and metrics from an openly licensed font.",
+  "type": "module",
+  "license": "MIT",
+  "scripts": {
+    "generate": "node generate.js"
+  },
+  "dependencies": {
+    "@napi-rs/canvas": "1.0.10"
+  }
+}

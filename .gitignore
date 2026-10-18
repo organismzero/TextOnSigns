@@ -62,3 +62,6 @@ Assets.zip
 
 # Local reference copies of the Hytale server jar and assets (proprietary, not redistributable)
 references/
+
+# Glyph generator dependencies
+tools/glyphs/node_modules/
