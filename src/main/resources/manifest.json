@@ -1,18 +1,23 @@
 {
-  "Group": "leniad",
+  "Group": "organismzero",
   "Name": "TextSigns",
-  "Version": "1.1.5",
+  "Version": "${version}",
   "Description": "A Hytale plugin that enables you to write to signs and see their texts within a popup.",
   "Authors": [
     {
       "Name": "Daniel Novaes Dias",
       "Email": "danynovaisdias@outlook.com",
       "Url": "https://github.com/DanielNovaesDias/TextSigns"
+    },
+    {
+      "Name": "OrganismZero",
+      "Email": "hello@organismzero.com",
+      "Url": "https://github.com/organismzero/TextSigns"
     }
   ],
-  "Website": "https://github.com/DanielNovaesDias/TextSigns",
+  "Website": "https://github.com/organismzero/TextSigns",
   "Main": "com.leniad.textsigns.TextSigns",
-  "ServerVersion": "*",
+  "ServerVersion": "~0.7.0",
   "Dependencies": {},
   "OptionalDependencies": {},
   "DisabledByDefault": false,
