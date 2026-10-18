@@ -29,27 +29,37 @@ Text wraps between words and shrinks to fit the sign, using up to five lines. Ha
 
 ## Supported signs
 
-All signs are made at the Builder's Workbench from the material shown. Some signs need planks rather than logs: turn the logs into planks at the workbench first.
+Signs are made at the Builder's Workbench from the material shown. Where a sign needs planks, turn the logs into planks at the workbench first.
 
 | Sign | Made from |
 |---|---|
-| Simple Wooden Sign | Hardwood logs: Oak, Ash, Apple or Fir |
-| Tavern Sign | Darkwood logs: Cedar |
-| Lumberjack Sign | Redwood logs: Redwood or Maple |
-| Crude Sign | Softwood or Lightwood planks, such as from Beech, Aspen, Banyan, Birch, Camphor, Gumboab or Sadwillow logs |
-| Ancient Sign | Blackwood or Deadwood planks, such as from Burnt, Fire or Petrified logs |
-| Sandswept Sign | Drywood or Goldenwood planks, such as from Dry, Bottletree, Amber, Palm or Sallow logs |
-| Frozen Castle Sign | Ice logs |
-| Dark Temple Sign | Shale |
-| Overgrown Temple Sign | Quartzite |
-| Wind Temple Sign | Sandstone |
+| Simple Wooden Sign | Hardwood: Oak, Ash, Apple or Fir logs, or Hardwood planks |
+| Tavern Sign | Darkwood: Cedar logs or Darkwood planks |
+| Lumberjack Sign | Redwood: Redwood, Maple or Blue Fig logs, or Redwood planks |
+| Crude Sign | Softwood or Lightwood planks, made from Aspen, Banyan, Beech, Birch, Camphor, Gumboab or Sadwillow logs |
+| Ancient Sign | Blackwood or Deadwood planks, made from Burnt, Fire or Petrified logs |
+| Sandswept Sign | Drywood or Goldenwood planks, made from Dry, Bottletree, Amber, Palm Tree, Sallow or Wild Wisteria logs |
+| Frozen Castle Sign | Frostwood logs |
+| Dark Temple Sign | Shale or Shale Cobble |
+| Overgrown Temple Sign | Quartzite or Quartzite Cobble |
+| Wind Temple Sign | Sandstone or Sandstone Cobble |
 | Feran Sign | Not craftable |
 | Lost Civilization Sign | Not craftable |
 | Kweebec Sign | Not craftable |
 
-These are the vanilla recipes; the plugin doesn't change them. Woods with no listed group, such as Azure, don't make any sign.
+These are the vanilla recipes; the plugin doesn't change them. Logs that aren't listed, such as Azure, don't make any sign.
 
-The Goblin, Under Construction, neon and prototype signs added in later Hytale versions aren't supported yet.
+### Other vanilla signs
+
+These signs can be crafted in vanilla Hytale but can't be written on yet:
+
+| Sign | Made from |
+|---|---|
+| Goblin Sign | 15 Scraps and 5 planks of any wood, at the Goblin Tinkerer's Workbench once it is powered and its Boiler is repaired |
+| Neon Sign - Fruit | 1 Darkwood - Half Slab, 1 Iron Ingot and 1 Iron Chain - Small, at the Architect's Workbench (makes 2) |
+| Neon Sign - Tea | 1 Darkwood - Half Slab, 1 Iron Ingot and 1 Iron Chain - Small, at the Architect's Workbench (makes 2) |
+
+The Under Construction sign and the prototype signs can't be crafted or written on.
 
 ## Limitations
 
