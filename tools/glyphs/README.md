@@ -31,4 +31,4 @@ To add a font, put its file and licence under `fonts/<Name>/` and add an entry t
 
 ## Ink colours
 
-Ink colours are defined in `INKS` in `generate.js`. Each sign type chooses the ink that reads best against its face.
+Ink colours are defined in `INKS` in `generate.js`. Dark and Light are the default inks: each sign type uses the one that reads best against its face. The other 16 are the Minecraft text colours that players choose in the editor or with `&0` to `&f` codes; their names and order must match `SignColours.java`.

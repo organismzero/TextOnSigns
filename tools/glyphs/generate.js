@@ -35,10 +35,28 @@ const FONTS = [
     },
 ];
 
-// Ink colours. Each sign type picks the one that reads best against its face.
+// Ink colours. Dark and Light are the default inks, and each sign type picks the one that reads best against its face.
+// The rest are the 16 Minecraft text colours, which players choose for a whole sign or with &0 to &f codes. Their order
+// and names must match SignColours.java.
 const INKS = [
     { name: 'Dark', colour: '#22170e' },
     { name: 'Light', colour: '#f4ead6' },
+    { name: 'Black', colour: '#000000' },
+    { name: 'DarkBlue', colour: '#0000aa' },
+    { name: 'DarkGreen', colour: '#00aa00' },
+    { name: 'DarkAqua', colour: '#00aaaa' },
+    { name: 'DarkRed', colour: '#aa0000' },
+    { name: 'DarkPurple', colour: '#aa00aa' },
+    { name: 'Gold', colour: '#ffaa00' },
+    { name: 'Grey', colour: '#aaaaaa' },
+    { name: 'DarkGrey', colour: '#555555' },
+    { name: 'Blue', colour: '#5555ff' },
+    { name: 'Green', colour: '#55ff55' },
+    { name: 'Aqua', colour: '#55ffff' },
+    { name: 'Red', colour: '#ff5555' },
+    { name: 'LightPurple', colour: '#ff55ff' },
+    { name: 'Yellow', colour: '#ffff55' },
+    { name: 'White', colour: '#ffffff' },
 ];
 
 // Common/ paths are sent to clients as assets. Model and texture paths in the game are relative to Common/, and the server only
