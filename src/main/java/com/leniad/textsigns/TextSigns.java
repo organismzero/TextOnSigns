@@ -8,6 +8,8 @@ import com.hypixel.hytale.server.core.plugin.JavaPluginInit;
 import com.hypixel.hytale.server.core.universe.world.storage.ChunkStore;
 import com.leniad.textsigns.interaction.SignInteraction;
 import com.leniad.textsigns.interaction.TextSignBlock;
+import com.leniad.textsigns.render.SignTextRenderer;
+import com.leniad.textsigns.render.SignTextSystem;
 import com.leniad.textsigns.signui.SignUISupplier;
 import com.leniad.textsigns.textvisualizer.CheckForSignTick;
 
@@ -37,6 +39,9 @@ public class TextSigns extends JavaPlugin {
         super.setup();
 
         this.textSignComponentType = this.getChunkStoreRegistry().registerComponent(TextSignBlock.class, "TextSign", TextSignBlock.CODEC);
+        SignTextRenderer renderer = SignTextRenderer.init();
+        getLogger().atInfo().log("[SignText] Text areas defined for %d sign types", renderer.faceCount());
+        this.getChunkStoreRegistry().registerSystem(new SignTextSystem());
         this.getEntityStoreRegistry().registerSystem(new CheckForSignTick());
         this.getCodecRegistry(OpenCustomUIInteraction.PAGE_CODEC).register("TextSign_UI", SignUISupplier.class, SignUISupplier.CODEC);
         this.getCodecRegistry(Interaction.CODEC).register("SignInteraction", SignInteraction.class, SignInteraction.CODEC);

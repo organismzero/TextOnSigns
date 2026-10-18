@@ -17,6 +17,7 @@ import com.hypixel.hytale.server.core.universe.PlayerRef;
 import com.hypixel.hytale.server.core.universe.world.storage.ChunkStore;
 import com.hypixel.hytale.server.core.universe.world.storage.EntityStore;
 import com.leniad.textsigns.interaction.TextSignBlock;
+import com.leniad.textsigns.render.SignTextRenderer;
 import org.joml.Vector3i;
 
 import javax.annotation.Nonnull;
@@ -24,6 +25,7 @@ import javax.annotation.Nullable;
 import java.util.UUID;
 
 public class SignUI extends InteractiveCustomUIPage<SignUI.PageData> {
+    private static final int MAX_TEXT_LENGTH = 200;
 
     private Vector3i interactedBlock;
 
@@ -77,8 +79,11 @@ public class SignUI extends InteractiveCustomUIPage<SignUI.PageData> {
 
         if (data.signText != null) {
             if (!signState.getIsLocked()) {
-                signState.setSignText(data.signText);
+                String text = data.signText.length() > MAX_TEXT_LENGTH ? data.signText.substring(0, MAX_TEXT_LENGTH) : data.signText;
+                signState.setSignText(text);
                 TextSignBlock.markNeedsSaving(signRef);
+                // Redraws as the player types, which doubles as a live preview
+                SignTextRenderer.get().requestRefresh(store.getExternalData().getWorld(), signRef);
             }
             return;
         }
