@@ -13,7 +13,7 @@
     "Dark",
     "Light"
   ],
-  "texturePattern": "Blocks/TextSigns/Fonts/Lexend/{ink}/Glyph_{code}.png",
+  "texturePattern": "Items/TextSigns/Fonts/Lexend/{ink}/Glyph_{code}.png",
   "glyphs": {
     "32": {
       "char": " ",

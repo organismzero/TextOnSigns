@@ -40,8 +40,9 @@ const INKS = [
     { name: 'Light', colour: '#f4ead6' },
 ];
 
-// Common/ paths are sent to clients as assets. Model and texture paths in the game are relative to Common/.
-const COMMON_DIR = join(RESOURCES, 'Common', 'Blocks', 'TextSigns');
+// Common/ paths are sent to clients as assets. Model and texture paths in the game are relative to Common/, and the server only
+// accepts entity model assets under Characters/, NPC/, Items/ or VFX/.
+const COMMON_DIR = join(RESOURCES, 'Common', 'Items', 'TextSigns');
 // Metrics and licences are plain classpath resources read by the plugin, outside the asset pack folders.
 const DATA_DIR = join(RESOURCES, 'textsigns', 'fonts');
 
@@ -188,7 +189,7 @@ function generateFont(font) {
         descent: round2(fontMetrics.fontBoundingBoxDescent),
         lineHeight: round2(fontMetrics.fontBoundingBoxAscent + fontMetrics.fontBoundingBoxDescent),
         inks: INKS.map((ink) => ink.name),
-        texturePattern: `Blocks/TextSigns/Fonts/${font.name}/{ink}/Glyph_{code}.png`,
+        texturePattern: `Items/TextSigns/Fonts/${font.name}/{ink}/Glyph_{code}.png`,
         glyphs,
     };
 
