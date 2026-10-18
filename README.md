@@ -1,6 +1,6 @@
 # TextSigns
 
-![TextSigns logo](src/main/resources/Common/UI/leniad_TextSigns.png "TextSigns")
+![TextSigns logo](src/main/resources/Common/UI/TextSigns-Danger-Enter-at-own-risk.jpg "TextSigns")
 
 A Hytale server plugin that lets players write on signs. The text is drawn on the face of the sign, so every player can read it just by looking at the sign.
 
