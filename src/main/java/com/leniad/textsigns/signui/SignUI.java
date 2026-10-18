@@ -64,8 +64,9 @@ public class SignUI extends InteractiveCustomUIPage<SignUI.PageData> {
         }
 
         uiEventBuilder.addEventBinding(CustomUIEventBindingType.ValueChanged, "#TXTSSignInput", EventData.of("@SignText", "#TXTSSignInput.Value"), false);
-        // Enter in the text field saves and closes the editor
+        // Enter in the text field or the Save button saves and closes the editor
         uiEventBuilder.addEventBinding(CustomUIEventBindingType.Validating, "#TXTSSignInput", EventData.of(PageData.KEY_ACTION, ACTION_SAVE).append("@SignText", "#TXTSSignInput.Value"), false);
+        uiEventBuilder.addEventBinding(CustomUIEventBindingType.Activating, "#TXTSSaveButton", EventData.of(PageData.KEY_ACTION, ACTION_SAVE).append("@SignText", "#TXTSSignInput.Value"), false);
         uiEventBuilder.addEventBinding(CustomUIEventBindingType.ValueChanged, "#TXTSCheckBox", EventData.of("@SignLocked", "#TXTSCheckBox.Value"), false);
 
     }
