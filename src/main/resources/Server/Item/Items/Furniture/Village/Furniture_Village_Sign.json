@@ -35,12 +35,17 @@
         ],
         "HitboxType": "Sign_Side",
         "VariantRotation": "NESW",
-        "IgnoreSupportWhenPlaced": true,
         "Gathering": {
             "Soft": {
                 "IsWeaponBreakable": false
             }
         },
+        "BlockParticleSetId": "Wood",
+        "BlockSoundSetId": "Wood",
+        "PhysicalMaterialId": "Wood",
+        "ParticleColor": "#5b3222",
+        "TextureComputedColor": "#573323",
+        "IgnoreSupportWhenPlaced": true,
         "Interactions": {
             "Use": {
                 "Interactions": [
@@ -50,16 +55,11 @@
                 ]
             }
         },
-        "State": {
-            "Id": "SignState",
-            "SignText": {
-                "Text": "",
-                "IsLocked": "false"
+        "BlockEntity": {
+            "Components": {
+                "TextSign": {}
             }
-        },
-        "BlockParticleSetId": "Wood",
-        "BlockSoundSetId": "Wood",
-        "ParticleColor": "#5b3222"
+        }
     },
     "PlayerAnimationsId": "Block",
     "ResourceTypes": [

@@ -15,8 +15,10 @@
         "Secondary": "Block_Secondary"
     },
     "BlockType": {
-        "BlockParticleSetId": "Stone",
+        "BlockParticleSetId": "Wood",
         "BlockSoundSetId": "Wood",
+        "PhysicalMaterialId": "Wood",
+        "ParticleColor": "#4e462c",
         "CustomModel": "Blocks/Decorative_Sets/Human_Ruins/Sign.blockymodel",
         "CustomModelTexture": [
             {
@@ -28,22 +30,6 @@
         "Gathering": {
             "Soft": {
                 "IsWeaponBreakable": false
-            }
-        },
-        "Interactions": {
-            "Use": {
-                "Interactions": [
-                    {
-                        "Type": "SignInteraction"
-                    }
-                ]
-            }
-        },
-        "State": {
-            "Id": "SignState",
-            "SignText": {
-                "Text": "",
-                "IsLocked": "false"
             }
         },
         "HitboxType": "Sign_Top",
@@ -62,7 +48,22 @@
             ]
         },
         "VariantRotation": "NESW",
-        "IgnoreSupportWhenPlaced": true
+        "TextureComputedColor": "#3A3429",
+        "IgnoreSupportWhenPlaced": true,
+        "Interactions": {
+            "Use": {
+                "Interactions": [
+                    {
+                        "Type": "SignInteraction"
+                    }
+                ]
+            }
+        },
+        "BlockEntity": {
+            "Components": {
+                "TextSign": {}
+            }
+        }
     },
     "ResourceTypes": [
         {

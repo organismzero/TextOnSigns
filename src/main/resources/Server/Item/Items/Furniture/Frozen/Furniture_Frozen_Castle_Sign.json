@@ -31,6 +31,7 @@
     "BlockType": {
         "BlockParticleSetId": "Ice",
         "BlockSoundSetId": "Ice",
+        "PhysicalMaterialId": "Ice",
         "CustomModel": "Blocks/Decorative_Sets/Frozen_Castle/Sign.blockymodel",
         "CustomModelTexture": [
             {
@@ -42,22 +43,6 @@
         "Gathering": {
             "Soft": {
                 "IsWeaponBreakable": false
-            }
-        },
-        "Interactions": {
-            "Use": {
-                "Interactions": [
-                    {
-                        "Type": "SignInteraction"
-                    }
-                ]
-            }
-        },
-        "State": {
-            "Id": "SignState",
-            "SignText": {
-                "Text": "",
-                "IsLocked": "false"
             }
         },
         "HitboxType": "Sign_Side",
@@ -76,8 +61,23 @@
             ]
         },
         "VariantRotation": "NESW",
+        "ParticleColor": "#5bbaca",
+        "TextureComputedColor": "#87E5F3",
         "IgnoreSupportWhenPlaced": true,
-        "ParticleColor": "#5bbaca"
+        "Interactions": {
+            "Use": {
+                "Interactions": [
+                    {
+                        "Type": "SignInteraction"
+                    }
+                ]
+            }
+        },
+        "BlockEntity": {
+            "Components": {
+                "TextSign": {}
+            }
+        }
     },
     "ResourceTypes": [
         {

@@ -18,6 +18,7 @@
     "BlockType": {
         "BlockParticleSetId": "Wood",
         "BlockSoundSetId": "Wood",
+        "PhysicalMaterialId": "Wood",
         "CustomModel": "Blocks/Decorative_Sets/Kweebec/Sign.blockymodel",
         "CustomModelTexture": [
             {
@@ -31,6 +32,13 @@
                 "IsWeaponBreakable": false
             }
         },
+        "HitboxType": "Sign_Top",
+        "Material": "Solid",
+        "Opacity": "Transparent",
+        "ParticleColor": "#633625",
+        "VariantRotation": "NESW",
+        "TextureComputedColor": "#553520",
+        "IgnoreSupportWhenPlaced": true,
         "Interactions": {
             "Use": {
                 "Interactions": [
@@ -40,19 +48,11 @@
                 ]
             }
         },
-        "State": {
-            "Id": "SignState",
-            "SignText": {
-                "Text": "",
-                "IsLocked": "false"
+        "BlockEntity": {
+            "Components": {
+                "TextSign": {}
             }
-        },
-        "HitboxType": "Sign_Top",
-        "Material": "Solid",
-        "Opacity": "Transparent",
-        "ParticleColor": "#633625",
-        "VariantRotation": "NESW",
-        "IgnoreSupportWhenPlaced": true
+        }
     },
     "ResourceTypes": [
         {

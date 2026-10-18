@@ -26,6 +26,7 @@
     "BlockType": {
         "BlockParticleSetId": "Stone",
         "BlockSoundSetId": "Stone",
+        "PhysicalMaterialId": "Stone",
         "CustomModel": "Blocks/Decorative_Sets/Temple_Emerald/Sign.blockymodel",
         "CustomModelTexture": [
             {
@@ -37,22 +38,6 @@
         "Gathering": {
             "Soft": {
                 "IsWeaponBreakable": false
-            }
-        },
-        "Interactions": {
-            "Use": {
-                "Interactions": [
-                    {
-                        "Type": "SignInteraction"
-                    }
-                ]
-            }
-        },
-        "State": {
-            "Id": "SignState",
-            "SignText": {
-                "Text": "",
-                "IsLocked": "false"
             }
         },
         "HitboxType": "Sign_Wall",
@@ -72,7 +57,22 @@
             ]
         },
         "VariantRotation": "NESW",
-        "IgnoreSupportWhenPlaced": true
+        "TextureComputedColor": "#9C8C56",
+        "IgnoreSupportWhenPlaced": true,
+        "Interactions": {
+            "Use": {
+                "Interactions": [
+                    {
+                        "Type": "SignInteraction"
+                    }
+                ]
+            }
+        },
+        "BlockEntity": {
+            "Components": {
+                "TextSign": {}
+            }
+        }
     },
     "ResourceTypes": [
         {

@@ -1,10 +1,10 @@
 {
     "TranslationProperties": {
-        "Name": "server.items.Furniture_Temple_Emerald_Sign.name"
+        "Name": "server.items.Furniture_Temple_Wind_Sign.name"
     },
     "PlayerAnimationsId": "Block",
     "Categories": ["Furniture.Signs"],
-    "Set": "Furniture_Tavern",
+    "Set": "Furniture_Temple_Wind",
     "Interactions": {
         "Primary": "Block_Primary",
         "Secondary": "Block_Secondary"
@@ -12,7 +12,7 @@
     "Recipe": {
         "Input": [
             {
-                "ResourceTypeId": "Rock_Quartzite"
+                "ResourceTypeId": "Rock_Sandstone"
             }
         ],
         "BenchRequirement": [
@@ -26,10 +26,11 @@
     "BlockType": {
         "BlockParticleSetId": "Stone",
         "BlockSoundSetId": "Stone",
-        "CustomModel": "Blocks/Decorative_Sets/Temple_Emerald/Sign.blockymodel",
+        "PhysicalMaterialId": "Stone",
+        "CustomModel": "Blocks/Decorative_Sets/Temple_Wind/Sign.blockymodel",
         "CustomModelTexture": [
             {
-                "Texture": "Blocks/Decorative_Sets/Temple_Emerald/Sign_Texture.png",
+                "Texture": "Blocks/Decorative_Sets/Temple_Wind/Sign_Texture.png",
                 "Weight": 1
             }
         ],
@@ -39,26 +40,10 @@
                 "IsWeaponBreakable": false
             }
         },
-        "Interactions": {
-            "Use": {
-                "Interactions": [
-                    {
-                        "Type": "SignInteraction"
-                    }
-                ]
-            }
-        },
-        "State": {
-            "Id": "SignState",
-            "SignText": {
-                "Text": "",
-                "IsLocked": "false"
-            }
-        },
         "HitboxType": "Sign_Wall",
         "Material": "Solid",
         "Opacity": "Transparent",
-        "ParticleColor": "#9f9664",
+        "ParticleColor": "#cca159",
         "Support": {
             "East": [
                 {
@@ -72,7 +57,22 @@
             ]
         },
         "VariantRotation": "NESW",
-        "IgnoreSupportWhenPlaced": true
+        "TextureComputedColor": "#B38440",
+        "IgnoreSupportWhenPlaced": true,
+        "Interactions": {
+            "Use": {
+                "Interactions": [
+                    {
+                        "Type": "SignInteraction"
+                    }
+                ]
+            }
+        },
+        "BlockEntity": {
+            "Components": {
+                "TextSign": {}
+            }
+        }
     },
     "ResourceTypes": [
         {
@@ -82,7 +82,12 @@
             "Id": "Charcoal"
         }
     ],
-    "Icon": "Icons/ItemsGenerated/Furniture_Temple_Emerald_Sign.png",
+    "IconProperties": {
+        "Scale": 0.58823,
+        "Rotation": [22.5, 45, 22.5],
+        "Translation": [8.39, -19.21]
+    },
+    "Icon": "Icons/ItemsGenerated/Furniture_Temple_Wind_Sign.png",
     "Tags": {
         "Type": ["Furniture"],
         "Family": ["Temple"]

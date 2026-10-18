@@ -33,6 +33,7 @@
         "BlockParticleSetId": "Stone",
         "ParticleColor": "#383b3f",
         "BlockSoundSetId": "Stone",
+        "PhysicalMaterialId": "Stone",
         "CustomModel": "Blocks/Decorative_Sets/Temple_Dark/Sign.blockymodel",
         "CustomModelTexture": [
             {
@@ -44,22 +45,6 @@
         "Gathering": {
             "Soft": {
                 "IsWeaponBreakable": false
-            }
-        },
-        "Interactions": {
-            "Use": {
-                "Interactions": [
-                    {
-                        "Type": "SignInteraction"
-                    }
-                ]
-            }
-        },
-        "State": {
-            "Id": "SignState",
-            "SignText": {
-                "Text": "",
-                "IsLocked": "false"
             }
         },
         "HitboxType": "Sign_Wall",
@@ -78,7 +63,22 @@
             ]
         },
         "VariantRotation": "NESW",
-        "IgnoreSupportWhenPlaced": true
+        "TextureComputedColor": "#2E4044",
+        "IgnoreSupportWhenPlaced": true,
+        "Interactions": {
+            "Use": {
+                "Interactions": [
+                    {
+                        "Type": "SignInteraction"
+                    }
+                ]
+            }
+        },
+        "BlockEntity": {
+            "Components": {
+                "TextSign": {}
+            }
+        }
     },
     "Tags": {
         "Type": ["Furniture"],

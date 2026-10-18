@@ -1,111 +1,96 @@
 {
-  "TranslationProperties": {
-    "Name": "server.items.Furniture_Desert_Sign.name"
-  },
-  "PlayerAnimationsId": "Block",
-  "Categories": [
-    "Furniture.Signs"
-  ],
-  "Set": "Furniture_Desert",
-  "Interactions": {
-    "Primary": "Block_Primary",
-    "Secondary": "Block_Secondary"
-  },
-  "Recipe": {
-    "Input": [
-      {
-        "ResourceTypeId": "Wood_Drywood_Goldenwood"
-      }
-    ],
-    "BenchRequirement": [
-      {
-        "Id": "Builders",
-        "Type": "StructuralCrafting",
-        "Categories": [
-          "Sign"
-        ]
-      }
-    ]
-  },
-  "BlockType": {
-    "BlockParticleSetId": "Wood",
-    "BlockSoundSetId": "Wood",
-    "CustomModel": "Blocks/Decorative_Sets/Desert/Sign.blockymodel",
-    "CustomModelTexture": [
-      {
-        "Texture": "Blocks/Decorative_Sets/Desert/Sign_Texture.png",
-        "Weight": 1
-      }
-    ],
-    "DrawType": "Model",
-    "Gathering": {
-      "Soft": {
-        "IsWeaponBreakable": false
-      }
+    "TranslationProperties": {
+        "Name": "server.items.Furniture_Desert_Sign.name"
     },
+    "PlayerAnimationsId": "Block",
+    "Categories": ["Furniture.Signs"],
+    "Set": "Furniture_Desert",
     "Interactions": {
-      "Use": {
-        "Interactions": [
-          {
-            "Type": "SignInteraction"
-          }
+        "Primary": "Block_Primary",
+        "Secondary": "Block_Secondary"
+    },
+    "Recipe": {
+        "Input": [
+            {
+                "ResourceTypeId": "Wood_Drywood_Goldenwood"
+            }
+        ],
+        "BenchRequirement": [
+            {
+                "Id": "Builders",
+                "Type": "StructuralCrafting",
+                "Categories": ["Sign"]
+            }
         ]
-      }
     },
-    "State": {
-      "Id": "SignState",
-      "SignText": {
-        "Text": "",
-        "IsLocked": "false"
-      }
-    },
-    "HitboxType": "Sign_Top",
-    "Material": "Solid",
-    "Opacity": "Transparent",
-    "ParticleColor": "#543022",
-    "Support": {
-      "East": [
-        {
-          "FaceType": "Full"
+    "BlockType": {
+        "BlockParticleSetId": "Wood",
+        "BlockSoundSetId": "Wood",
+        "PhysicalMaterialId": "Wood",
+        "CustomModel": "Blocks/Decorative_Sets/Desert/Sign.blockymodel",
+        "CustomModelTexture": [
+            {
+                "Texture": "Blocks/Decorative_Sets/Desert/Sign_Texture.png",
+                "Weight": 1
+            }
+        ],
+        "DrawType": "Model",
+        "Gathering": {
+            "Soft": {
+                "IsWeaponBreakable": false
+            }
+        },
+        "HitboxType": "Sign_Top",
+        "Material": "Solid",
+        "Opacity": "Transparent",
+        "ParticleColor": "#a58560",
+        "Support": {
+            "East": [
+                {
+                    "FaceType": "Full"
+                }
+            ],
+            "West": [
+                {
+                    "FaceType": "Full"
+                }
+            ]
+        },
+        "VariantRotation": "NESW",
+        "TextureComputedColor": "#38433E",
+        "IgnoreSupportWhenPlaced": true,
+        "Interactions": {
+            "Use": {
+                "Interactions": [
+                    {
+                        "Type": "SignInteraction"
+                    }
+                ]
+            }
+        },
+        "BlockEntity": {
+            "Components": {
+                "TextSign": {}
+            }
         }
-      ],
-      "West": [
+    },
+    "ResourceTypes": [
         {
-          "FaceType": "Full"
+            "Id": "Fuel"
+        },
+        {
+            "Id": "Charcoal"
         }
-      ]
-    },
-    "VariantRotation": "NESW",
-    "IgnoreSupportWhenPlaced": true
-  },
-  "ResourceTypes": [
-    {
-      "Id": "Fuel"
-    },
-    {
-      "Id": "Charcoal"
-    }
-  ],
-  "IconProperties": {
-    "Scale": 0.8,
-    "Translation": [
-      0,
-      -16.2
     ],
-    "Rotation": [
-      22.5,
-      45,
-      22.5
-    ]
-  },
-  "Icon": "Icons/ItemsGenerated/Furniture_Desert_Sign.png",
-  "Tags": {
-    "Type": [
-      "Furniture"
-    ],
-    "Family": [
-      "Desert"
-    ]
-  },
-  "ItemSoundSetId": "ISS_Blocks_Wood"
+    "IconProperties": {
+        "Scale": 0.8,
+        "Translation": [0, -16.2],
+        "Rotation": [22.5, 45, 22.5]
+    },
+    "Icon": "Icons/ItemsGenerated/Furniture_Desert_Sign.png",
+    "Tags": {
+        "Type": ["Furniture"],
+        "Family": ["Desert"]
+    },
+    "ItemSoundSetId": "ISS_Blocks_Wood"
 }
