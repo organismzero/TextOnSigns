@@ -1,72 +1,72 @@
-name: Build Plugin
+name: Build and release
+
+# Every push to main and every pull request builds the plugin and runs the tests. A push to main whose pluginVersion in
+# gradle.properties has no release yet also tags v<version> and publishes a GitHub release with the plugin jar.
 
 on:
   push:
-    branches: [ main, develop ]
+    branches: [main]
   pull_request:
-    branches: [ main ]
+    branches: [main]
+  workflow_dispatch:
+
+permissions:
+  contents: write
 
 jobs:
   build:
     runs-on: ubuntu-latest
-    
+
     steps:
-    - name: Checkout Repository
-      uses: actions/checkout@v4
-    
-    - name: Setup Java 25
-      uses: actions/setup-java@v4
-      with:
-        java-version: '25'
-        distribution: 'temurin'
-    
-    - name: Cache Gradle Dependencies
-      uses: actions/cache@v4
-      with:
-        path: ~/.gradle
-        key: ${{ runner.os }}-gradle-${{ hashFiles('**/*.gradle*', '**/gradle-wrapper.properties') }}
-        restore-keys: |
-          ${{ runner.os }}-gradle-
-    
-    - name: Grant Execute Permission for Gradlew
-      run: chmod +x gradlew
-    
-    - name: Build with Gradle
-      run: ./gradlew shadowJar
-    
-    - name: Run Tests
-      run: ./gradlew test
-    
-    - name: Upload Artifact
-      uses: actions/upload-artifact@v4
-      with:
-        name: plugin-jar
-        path: build/libs/*.jar
-        
-  release:
-    needs: build
-    runs-on: ubuntu-latest
-    if: startsWith(github.ref, 'refs/tags/v')
-    
-    steps:
-    - name: Checkout Repository
-      uses: actions/checkout@v4
-    
-    - name: Setup Java 25
-      uses: actions/setup-java@v4
-      with:
-        java-version: '25'
-        distribution: 'temurin'
-    
-    - name: Grant Execute Permission for Gradlew
-      run: chmod +x gradlew
-    
-    - name: Build with Gradle
-      run: ./gradlew shadowJar
-    
-    - name: Create Release
-      uses: softprops/action-gh-release@v1
-      with:
-        files: build/libs/*.jar
-      env:
-        GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+      - name: Check out the repository
+        uses: actions/checkout@v4
+        with:
+          # Full history and tags, for the release notes
+          fetch-depth: 0
+
+      - name: Set up Java 25
+        uses: actions/setup-java@v4
+        with:
+          java-version: '25'
+          distribution: 'temurin'
+
+      - name: Set up Gradle
+        uses: gradle/actions/setup-gradle@v4
+
+      - name: Build and test
+        run: ./gradlew build
+
+      - name: Upload the plugin jar
+        uses: actions/upload-artifact@v4
+        with:
+          name: plugin-jar
+          path: build/libs/*.jar
+
+      - name: Release a new version
+        if: github.event_name != 'pull_request' && github.ref == 'refs/heads/main'
+        env:
+          GH_TOKEN: ${{ github.token }}
+        run: |
+          version=$(sed -n 's/^pluginVersion=//p' gradle.properties)
+          tag="v${version}"
+          if git rev-parse -q --verify "refs/tags/${tag}" > /dev/null; then
+            echo "${tag} is already released; bump pluginVersion in gradle.properties to release again."
+            exit 0
+          fi
+
+          # Notes list the commits since the previous release
+          previous=$(git describe --tags --abbrev=0 2>/dev/null || true)
+          if [ -n "${previous}" ]; then
+            {
+              echo "## Changes since ${previous}"
+              echo
+              git log --no-merges --pretty='- %s' "${previous}..HEAD"
+            } > release-notes.md
+          else
+            echo "First release from this repository. See the README for what the plugin does." > release-notes.md
+          fi
+
+          gh release create "${tag}" build/libs/*.jar \
+            --target "${GITHUB_SHA}" \
+            --title "${GITHUB_REPOSITORY#*/} ${version}" \
+            --notes-file release-notes.md

@@ -11,11 +11,15 @@ description = findProperty("pluginDescription") as String? ?: "A Hytale plugin t
 repositories {
     mavenLocal()
     mavenCentral()
+    maven {
+        name = "hytale"
+        url = uri("https://maven.hytale.com/release")
+    }
 }
 
 dependencies {
-    // Hytale Server API (provided by server at runtime)
-    compileOnly(files("./HytaleServer.jar"))
+    // Hytale Server API (provided by server at runtime), from Hypixel's Maven repository
+    compileOnly("com.hypixel.hytale:Server:${property("hytaleVersion")}")
     
     // Common dependencies (will be bundled in JAR)
     implementation("com.google.code.gson:gson:2.10.1")
