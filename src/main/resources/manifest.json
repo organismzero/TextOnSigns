@@ -14,9 +14,7 @@
   "Main": "com.leniad.textsigns.TextSigns",
   "ServerVersion": "*",
   "Dependencies": {},
-  "OptionalDependencies": {
-    "Buuz135:MultipleHUD": "*"
-  },
+  "OptionalDependencies": {},
   "DisabledByDefault": false,
   "IncludesAssetPack": true
 }

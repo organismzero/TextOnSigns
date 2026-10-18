@@ -8,7 +8,6 @@ import com.hypixel.hytale.server.core.universe.PlayerRef;
 import com.hypixel.hytale.server.core.ui.PatchStyle;
 
 import javax.annotation.Nonnull;
-import java.util.Arrays;
 
 public class TextVisualizer extends CustomUIHud {
     private String text = "";
@@ -16,7 +15,7 @@ public class TextVisualizer extends CustomUIHud {
     private final PatchStyle bg = new PatchStyle().setBorder(Value.of(20)).setTexturePath(Value.of("Common/TooltipDefaultBackground.png"));
 
     public TextVisualizer(@Nonnull PlayerRef playerRef, String text, boolean shouldDisplay) {
-        super(playerRef);
+        super(playerRef, "TextSigns_HUD");
         this.text = text;
         this.shouldDisplay = shouldDisplay;
     }

@@ -5,29 +5,25 @@ import com.hypixel.hytale.codec.KeyedCodec;
 import com.hypixel.hytale.codec.builder.BuilderCodec;
 import com.hypixel.hytale.component.Ref;
 import com.hypixel.hytale.component.Store;
-import com.hypixel.hytale.math.vector.Vector3i;
 import com.hypixel.hytale.protocol.packets.interface_.CustomPageLifetime;
 import com.hypixel.hytale.protocol.packets.interface_.CustomUIEventBindingType;
 import com.hypixel.hytale.server.core.entity.entities.player.pages.InteractiveCustomUIPage;
+import com.hypixel.hytale.server.core.modules.block.BlockModule;
 import com.hypixel.hytale.server.core.modules.interaction.components.PlacedByInteractionComponent;
 import com.hypixel.hytale.server.core.ui.builder.EventData;
 import com.hypixel.hytale.server.core.ui.builder.UICommandBuilder;
 import com.hypixel.hytale.server.core.ui.builder.UIEventBuilder;
 import com.hypixel.hytale.server.core.universe.PlayerRef;
-import com.hypixel.hytale.server.core.universe.world.chunk.WorldChunk;
-import com.hypixel.hytale.server.core.universe.world.meta.BlockState;
 import com.hypixel.hytale.server.core.universe.world.storage.ChunkStore;
 import com.hypixel.hytale.server.core.universe.world.storage.EntityStore;
-import com.hypixel.hytale.server.core.util.TargetUtil;
-import com.leniad.textsigns.interaction.SignState;
+import com.leniad.textsigns.interaction.TextSignBlock;
+import org.joml.Vector3i;
+
 import javax.annotation.Nonnull;
+import javax.annotation.Nullable;
 import java.util.UUID;
 
-@SuppressWarnings("removal")
 public class SignUI extends InteractiveCustomUIPage<SignUI.PageData> {
-
-    private String signText;
-    private boolean isLocked;
 
     private Vector3i interactedBlock;
 
@@ -40,30 +36,16 @@ public class SignUI extends InteractiveCustomUIPage<SignUI.PageData> {
     @Override
     public void build(@Nonnull Ref<EntityStore> ref, @Nonnull UICommandBuilder uiCommandBuilder, @Nonnull UIEventBuilder uiEventBuilder, @Nonnull Store<EntityStore> store) {
         uiCommandBuilder.append("Pages/TextSigns/TextSign.ui");
-        SignState currentState = getSignMetaData(store);
+        Ref<ChunkStore> signRef = getSignRef(store);
+        TextSignBlock currentState = getSignMetaData(signRef);
 
         if (currentState == null) {
             return;
         }
-        WorldChunk chunk = currentState.getChunk();
-        assert chunk != null;
-        Ref<ChunkStore> blockChunkRef = chunk.getBlockComponentEntity(interactedBlock.x, interactedBlock.y, interactedBlock.z);
-        assert blockChunkRef != null;
-        PlacedByInteractionComponent placedByComp =  blockChunkRef.getStore().getComponent(blockChunkRef, PlacedByInteractionComponent.getComponentType());
 
-        if (placedByComp != null) {
-            UUID PlayerOwnerID = placedByComp.getWhoPlacedUuid();
-
-            if (PlayerOwnerID != null) {
-                PlayerRef currentPlayer = store.getComponent(ref, PlayerRef.getComponentType());
-                assert currentPlayer != null;
-
-                if (!PlayerOwnerID.equals(currentPlayer.getUuid())) {
-                    uiCommandBuilder.set("#TXTSCheckBox.Disabled", true);
-                }
-            }
+        if (!canChangeLock(ref, store, signRef)) {
+            uiCommandBuilder.set("#TXTSCheckBox.Disabled", true);
         }
-
 
         uiCommandBuilder.set("#TXTSSignInput.Value", currentState.getSignText());
         uiCommandBuilder.set("#TXTSCheckBox.Value", currentState.getIsLocked());
@@ -80,44 +62,67 @@ public class SignUI extends InteractiveCustomUIPage<SignUI.PageData> {
     @Override
     public void handleDataEvent(@Nonnull Ref<EntityStore> ref, @Nonnull Store<EntityStore> store, @Nonnull SignUI.PageData data) {
         super.handleDataEvent(ref, store, data);
-        setSignMetaData(ref, store, SignUI.PageData.CODEC, data);
+        setSignMetaData(ref, store, data);
     }
 
 
 
-    public void setSignMetaData(Ref<EntityStore> ref, @Nonnull Store<EntityStore> store, BuilderCodec<SignUI.PageData> codec, SignUI.PageData data) {
-        BlockState signState = store.getExternalData().getWorld().getState(this.interactedBlock.x, this.interactedBlock.y, this.interactedBlock.z, true);
+    public void setSignMetaData(@Nonnull Ref<EntityStore> ref, @Nonnull Store<EntityStore> store, SignUI.PageData data) {
+        Ref<ChunkStore> signRef = getSignRef(store);
+        TextSignBlock signState = getSignMetaData(signRef);
 
-        if (signState instanceof SignState signStateCast) {
+        if (signState == null) {
+            return;
+        }
 
-            if (data.signText != null) {
-                if (!signStateCast.getIsLocked()) {
-                    signStateCast.setSignText(data.signText);
-                }
-                return;
+        if (data.signText != null) {
+            if (!signState.getIsLocked()) {
+                signState.setSignText(data.signText);
+                TextSignBlock.markNeedsSaving(signRef);
             }
+            return;
+        }
 
-            if (data.isLocked != signStateCast.getIsLocked()) {
-                signStateCast.setIsLocked(data.isLocked);
-                UICommandBuilder update = new UICommandBuilder();
-                update.set("#TXTSSignInput.IsReadOnly", data.isLocked);
-                this.sendUpdate(update, false);
-            }
+        if (data.isLocked != signState.getIsLocked() && canChangeLock(ref, store, signRef)) {
+            signState.setIsLocked(data.isLocked);
+            TextSignBlock.markNeedsSaving(signRef);
+            UICommandBuilder update = new UICommandBuilder();
+            update.set("#TXTSSignInput.IsReadOnly", data.isLocked);
+            this.sendUpdate(update, false);
         }
     }
 
-    public SignState getSignMetaData(@Nonnull Store<EntityStore> store) {
-        BlockState signState = store.getExternalData().getWorld().getState(this.interactedBlock.x, this.interactedBlock.y, this.interactedBlock.z, true);
-
-        if (signState instanceof SignState signStateCast) {
-            return signStateCast;
-        }
-
-        return null;
+    @Nullable
+    private Ref<ChunkStore> getSignRef(@Nonnull Store<EntityStore> store) {
+        return BlockModule.getBlockEntity(store.getExternalData().getWorld(), this.interactedBlock.x, this.interactedBlock.y, this.interactedBlock.z);
     }
 
-    private Vector3i getSelectedBlockPos(Ref<EntityStore> ref) {
-        return TargetUtil.getTargetBlock(ref, 5, ref.getStore());
+    @Nullable
+    public TextSignBlock getSignMetaData(@Nullable Ref<ChunkStore> signRef) {
+        if (signRef == null) {
+            return null;
+        }
+
+        return signRef.getStore().getComponent(signRef, TextSignBlock.getComponentType());
+    }
+
+    /**
+     * Only the player who placed the sign may lock or unlock it. Signs with no recorded owner, such as
+     * generated ones, can be locked by anyone.
+     */
+    private boolean canChangeLock(@Nonnull Ref<EntityStore> ref, @Nonnull Store<EntityStore> store, @Nonnull Ref<ChunkStore> signRef) {
+        PlacedByInteractionComponent placedByComp = signRef.getStore().getComponent(signRef, PlacedByInteractionComponent.getComponentType());
+        if (placedByComp == null) {
+            return true;
+        }
+
+        UUID playerOwnerID = placedByComp.getWhoPlacedUuid();
+        if (playerOwnerID == null) {
+            return true;
+        }
+
+        PlayerRef currentPlayer = store.getComponent(ref, PlayerRef.getComponentType());
+        return currentPlayer != null && playerOwnerID.equals(currentPlayer.getUuid());
     }
 
     public static class PageData {

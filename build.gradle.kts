@@ -16,7 +16,6 @@ repositories {
 dependencies {
     // Hytale Server API (provided by server at runtime)
     compileOnly(files("./HytaleServer.jar"))
-    compileOnly(files("./libs/MultipleHUD-1.0.4.jar"))
     
     // Common dependencies (will be bundled in JAR)
     implementation("com.google.code.gson:gson:2.10.1")

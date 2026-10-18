@@ -4,23 +4,16 @@ import com.hypixel.hytale.component.*;
 import com.hypixel.hytale.component.query.Query;
 import com.hypixel.hytale.component.system.tick.EntityTickingSystem;
 import com.hypixel.hytale.logger.HytaleLogger;
-import com.hypixel.hytale.math.vector.Vector3i;
-import com.hypixel.hytale.server.core.entity.EntityUtils;
 import com.hypixel.hytale.server.core.entity.entities.Player;
-import com.hypixel.hytale.server.core.entity.entities.player.hud.CustomUIHud;
-import com.hypixel.hytale.server.core.ui.builder.UICommandBuilder;
 import com.hypixel.hytale.server.core.universe.PlayerRef;
 import com.hypixel.hytale.server.core.universe.world.World;
-import com.hypixel.hytale.server.core.universe.world.meta.BlockState;
+import com.hypixel.hytale.server.core.modules.block.BlockModule;
 import com.hypixel.hytale.server.core.universe.world.storage.EntityStore;
 import com.hypixel.hytale.server.core.util.TargetUtil;
-import com.buuz135.mhud.MultipleHUD;
-import com.leniad.textsigns.TextSigns;
-import com.leniad.textsigns.interaction.SignState;
-import org.w3c.dom.Text;
+import com.leniad.textsigns.interaction.TextSignBlock;
+import org.joml.Vector3i;
 
 import javax.annotation.Nonnull;
-import java.util.HashMap;
 import java.util.Map;
 import java.util.concurrent.ConcurrentHashMap;
 
@@ -37,24 +30,18 @@ public class CheckForSignTick extends EntityTickingSystem<EntityStore> {
 
     private final Map<PlayerRef, TextVisualizer> huds = new ConcurrentHashMap<>();
 
-    private boolean multipleHudAvailable = false;
-
-
-    public CheckForSignTick(boolean useMultipleHUD) {
+    public CheckForSignTick() {
         this.query = Query.and(new Query[]{Player.getComponentType()});
-
-        this.multipleHudAvailable = useMultipleHUD;
     }
 
     public void tick(float dt, int index, @Nonnull ArchetypeChunk<EntityStore> archetypeChunk,  @Nonnull Store<EntityStore> store,
                      @Nonnull CommandBuffer<EntityStore> commandBuffer) {
 
-        Holder<EntityStore> holder = EntityUtils.toHolder(index, archetypeChunk);
-        Player player = holder.getComponent(Player.getComponentType());
+        Player player = archetypeChunk.getComponent(index, Player.getComponentType());
         if (player == null) return;
 
-        PlayerRef playerRef = holder.getComponent(PlayerRef.getComponentType());
-        Ref<EntityStore> entStore = player.getReference();
+        PlayerRef playerRef = archetypeChunk.getComponent(index, PlayerRef.getComponentType());
+        Ref<EntityStore> entStore = archetypeChunk.getReferenceTo(index);
 
         TextVisualizer hud = this.huds.get(playerRef);
 
@@ -86,9 +73,9 @@ public class CheckForSignTick extends EntityTickingSystem<EntityStore> {
         World world = commandBuffer.getExternalData().getWorld();
 
         world.execute(() -> {
-            BlockState signData = world.getState(selectedBlock.x, selectedBlock.y, selectedBlock.z, true);
+            TextSignBlock signStateCast = BlockModule.getComponent(TextSignBlock.getComponentType(), world, selectedBlock.x, selectedBlock.y, selectedBlock.z);
 
-            if (signData instanceof SignState signStateCast) {
+            if (signStateCast != null) {
                 String value = signStateCast.getSignText();
 
                 if (value != null && !value.isEmpty()) {
@@ -122,11 +109,7 @@ public class CheckForSignTick extends EntityTickingSystem<EntityStore> {
     }
 
     private void setCustomUI(TextVisualizer hud, PlayerRef playerRef, Player player) {
-        if (this.multipleHudAvailable) {
-            MultipleHUD.getInstance().setCustomHud(player, playerRef, "TextSigns_HUD", hud);
-        } else {
-            hud.show();
-        }
+        player.getHudManager().addCustomHud(playerRef, hud);
     }
 
     private Vector3i getSelectedBlockPos(Ref<EntityStore> ref) {
