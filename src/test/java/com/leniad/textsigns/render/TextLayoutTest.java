@@ -5,6 +5,7 @@ import org.junit.jupiter.api.Test;
 import java.util.List;
 
 import static org.junit.jupiter.api.Assertions.assertEquals;
+import static org.junit.jupiter.api.Assertions.assertNull;
 import static org.junit.jupiter.api.Assertions.assertTrue;
 
 class TextLayoutTest {
@@ -19,13 +20,14 @@ class TextLayoutTest {
     @Test
     void wrapBreaksBetweenWords() {
         double width = TextLayout.width("Welcome ", FONT) + TextLayout.width("trav", FONT);
-        assertEquals(List.of("Welcome", "traveller"), TextLayout.wrap("Welcome traveller", FONT, width));
+        assertEquals(List.of("Welcome", "traveller"), TextLayout.wrap("Welcome traveller", FONT, width, false));
     }
 
     @Test
     void wrapBreaksWordsLongerThanALine() {
         double width = TextLayout.width("abcd", FONT) + 0.01;
-        List<String> lines = TextLayout.wrap("abcdefghij", FONT, width);
+        assertNull(TextLayout.wrap("abcdefghij", FONT, width, false));
+        List<String> lines = TextLayout.wrap("abcdefghij", FONT, width, true);
         assertEquals("abcdefghij", String.join("", lines));
         for (String line : lines) {
             assertTrue(TextLayout.width(line, FONT) <= width, line);
@@ -51,6 +53,15 @@ class TextLayoutTest {
     }
 
     @Test
+    void textShrinksRatherThanBreakingAWord() {
+        TextLayout.Result result = TextLayout.layout("Organism's Sign", FONT, 22, 18, 2, 5);
+        assertEquals(2, result.lineCount());
+        // The first line holds the whole of "Organism's": ten glyphs, all above the second line's glyphs
+        double firstLineY = result.glyphs().get(0).y();
+        assertEquals(10, result.glyphs().stream().filter(g -> g.y() == firstLineY).count());
+    }
+
+    @Test
     void textThatNeverFitsIsTruncatedToMaxLines() {
         String text = "word ".repeat(200);
         TextLayout.Result result = TextLayout.layout(text, FONT, 24, 16, 2, 5);
@@ -60,7 +71,7 @@ class TextLayoutTest {
     @Test
     void singleLineIsCentredHorizontally() {
         TextLayout.Result result = TextLayout.layout("HH", FONT, 24, 16, 2, 5);
-        double penOffset = (FONT.getCellWidth() / 2.0 - FONT.getOriginX()) * result.scale();
+        double penOffset = (FONT.quadLeft('H') + FONT.quadWidth('H') / 2.0) * result.scale();
         double lineStart = result.glyphs().get(0).x() - penOffset;
         double lineEnd = result.glyphs().get(1).x() - penOffset + FONT.advance('H') * result.scale();
         assertEquals(0, (lineStart + lineEnd) / 2, 1e-9);
@@ -72,10 +83,9 @@ class TextLayoutTest {
     }
 
     private static void assertFitsFace(TextLayout.Result result, double width, double height) {
-        double halfCell = FONT.getCellWidth() * result.scale() / 2;
-        double inkSlack = FONT.getOriginX() * result.scale() + halfCell;
         for (TextLayout.PlacedGlyph glyph : result.glyphs()) {
-            assertTrue(Math.abs(glyph.x()) <= width / 2 + inkSlack, "x " + glyph);
+            double halfQuad = FONT.quadWidth(glyph.character()) * result.scale() / 2;
+            assertTrue(Math.abs(glyph.x()) + halfQuad <= width / 2 + 1e-9, "x " + glyph);
             assertTrue(Math.abs(glyph.y()) <= height / 2, "y " + glyph);
         }
     }

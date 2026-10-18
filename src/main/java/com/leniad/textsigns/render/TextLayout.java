@@ -1,6 +1,7 @@
 package com.leniad.textsigns.render;
 
 import javax.annotation.Nonnull;
+import javax.annotation.Nullable;
 import java.util.ArrayList;
 import java.util.List;
 
@@ -11,7 +12,7 @@ import java.util.List;
 public final class TextLayout {
 
     /**
-     * A glyph to draw. x and y are the centre of the glyph's cell, in face pixels.
+     * A glyph to draw. x and y are the centre of the glyph's quad, in face pixels.
      */
     public record PlacedGlyph(char character, double x, double y) {
     }
@@ -41,15 +42,16 @@ public final class TextLayout {
         minLines = Math.max(1, Math.min(minLines, maxLines));
         for (int lineSlots = minLines; lineSlots <= maxLines; lineSlots++) {
             double scale = faceHeight / (lineSlots * font.getLineHeight());
-            List<String> lines = wrap(clean, font, faceWidth / scale);
-            if (lines.size() <= lineSlots) {
+            List<String> lines = wrap(clean, font, faceWidth / scale, false);
+            if (lines != null && lines.size() <= lineSlots) {
                 return place(lines, font, scale);
             }
         }
 
+        // Nothing fits without breaking a word, so break words at the smallest size
         double scale = faceHeight / (maxLines * font.getLineHeight());
-        List<String> lines = wrap(clean, font, faceWidth / scale);
-        return place(lines.subList(0, maxLines), font, scale);
+        List<String> lines = wrap(clean, font, faceWidth / scale, true);
+        return place(lines.subList(0, Math.min(lines.size(), maxLines)), font, scale);
     }
 
     /**
@@ -79,10 +81,11 @@ public final class TextLayout {
     }
 
     /**
-     * Greedy word wrap. Words wider than a line are broken between characters.
+     * Greedy word wrap. Words wider than a line are broken between characters if breakWords is set; otherwise the text
+     * doesn't fit and this returns null.
      */
-    @Nonnull
-    static List<String> wrap(@Nonnull String text, @Nonnull GlyphFont font, double maxWidth) {
+    @Nullable
+    static List<String> wrap(@Nonnull String text, @Nonnull GlyphFont font, double maxWidth, boolean breakWords) {
         List<String> lines = new ArrayList<>();
         StringBuilder line = new StringBuilder();
         double lineWidth = 0;
@@ -110,6 +113,9 @@ public final class TextLayout {
                 line.append(word);
                 lineWidth = wordWidth;
                 continue;
+            }
+            if (!breakWords) {
+                return null;
             }
 
             for (int i = 0; i < word.length(); i++) {
@@ -143,9 +149,8 @@ public final class TextLayout {
     private static Result place(@Nonnull List<String> lines, @Nonnull GlyphFont font, double scale) {
         double lineHeight = font.getLineHeight();
         double top = lines.size() * lineHeight / 2;
-        // Offsets from the pen position and baseline to the centre of a glyph's cell
-        double cellCentreX = font.getCellWidth() / 2.0 - font.getOriginX();
-        double cellCentreY = font.getBaselineY() - font.getCellHeight() / 2.0;
+        // Offset from the baseline to the vertical centre of a glyph's quad
+        double quadCentreY = font.getBaselineY() - font.getCellHeight() / 2.0;
 
         List<PlacedGlyph> glyphs = new ArrayList<>();
         for (int row = 0; row < lines.size(); row++) {
@@ -155,7 +160,8 @@ public final class TextLayout {
             for (int i = 0; i < line.length(); i++) {
                 char c = line.charAt(i);
                 if (c != ' ') {
-                    glyphs.add(new PlacedGlyph(c, (pen + cellCentreX) * scale, (baseline + cellCentreY) * scale));
+                    double quadCentreX = pen + font.quadLeft(c) + font.quadWidth(c) / 2.0;
+                    glyphs.add(new PlacedGlyph(c, quadCentreX * scale, (baseline + quadCentreY) * scale));
                 }
                 pen += font.advance(c);
             }

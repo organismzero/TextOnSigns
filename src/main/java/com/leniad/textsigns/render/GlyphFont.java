@@ -30,7 +30,10 @@ public final class GlyphFont {
     private final double descent;
     private final double lineHeight;
     private final String texturePattern;
+    private final String modelPattern;
     private final double[] advances = new double[LAST_CHAR - FIRST_CHAR + 1];
+    private final int[] quadLefts = new int[LAST_CHAR - FIRST_CHAR + 1];
+    private final int[] quadWidths = new int[LAST_CHAR - FIRST_CHAR + 1];
 
     private GlyphFont(@Nonnull JsonObject json) {
         this.name = json.get("font").getAsString();
@@ -42,12 +45,16 @@ public final class GlyphFont {
         this.descent = json.get("descent").getAsDouble();
         this.lineHeight = json.get("lineHeight").getAsDouble();
         this.texturePattern = json.get("texturePattern").getAsString();
+        this.modelPattern = json.get("modelPattern").getAsString();
 
         JsonObject glyphs = json.getAsJsonObject("glyphs");
         for (Map.Entry<String, JsonElement> entry : glyphs.entrySet()) {
             int code = Integer.parseInt(entry.getKey());
             if (code >= FIRST_CHAR && code <= LAST_CHAR) {
-                this.advances[code - FIRST_CHAR] = entry.getValue().getAsJsonObject().get("advance").getAsDouble();
+                JsonObject glyph = entry.getValue().getAsJsonObject();
+                this.advances[code - FIRST_CHAR] = glyph.get("advance").getAsDouble();
+                this.quadLefts[code - FIRST_CHAR] = glyph.get("quadLeft").getAsInt();
+                this.quadWidths[code - FIRST_CHAR] = glyph.get("quadWidth").getAsInt();
             }
         }
     }
@@ -86,6 +93,28 @@ public final class GlyphFont {
 
     public double advance(char c) {
         return advances[normalise(c) - FIRST_CHAR];
+    }
+
+    /**
+     * Left edge of a glyph's quad relative to the pen position.
+     */
+    public int quadLeft(char c) {
+        return quadLefts[normalise(c) - FIRST_CHAR];
+    }
+
+    /**
+     * Width of a glyph's quad, which is as wide as its ink. Zero for a space.
+     */
+    public int quadWidth(char c) {
+        return quadWidths[normalise(c) - FIRST_CHAR];
+    }
+
+    /**
+     * Path of the quad model a glyph is drawn on, relative to the Common asset folder.
+     */
+    @Nonnull
+    public String model(char c) {
+        return modelPattern.replace("{width}", Integer.toString(quadWidth(c)));
     }
 
     /**

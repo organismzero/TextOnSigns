@@ -3,12 +3,13 @@
 // Usage (from tools/glyphs): npm install && npm run generate
 //
 // For each font in FONTS and each ink colour in INKS, every printable ASCII character (32 to 126) is drawn into its own
-// CELL x CELL PNG. Every glyph shares the same pen origin and baseline inside its cell, so the renderer can place a glyph
-// by its pen position alone. A metrics JSON per font records each character's advance and ink extent, which the plugin
-// uses for word wrapping and spacing.
+// CELL x CELL PNG, left aligned so its ink starts at column 0, on the shared baseline. Each glyph is shown on a quad only as
+// wide as its ink, so neighbouring glyphs don't overlap: the client would otherwise let the transparent part of one glyph
+// hide its neighbour. A metrics JSON per font records each character's advance, quad position and quad width, which the
+// plugin uses for word wrapping and placement.
 
 import { createCanvas, GlobalFonts } from '@napi-rs/canvas';
-import { copyFileSync, mkdirSync, rmSync, writeFileSync } from 'node:fs';
+import { copyFileSync, mkdirSync, readdirSync, rmSync, writeFileSync } from 'node:fs';
 import { dirname, join } from 'node:path';
 import { fileURLToPath } from 'node:url';
 
@@ -104,9 +105,9 @@ function fitLayout(ctx, family) {
     throw new Error(`Could not fit ${family} into a ${CELL}px cell`);
 }
 
-function glyphModel() {
-    // A single forward-facing quad the size of one glyph cell, centred on the model origin.
-    // The texture path is chosen per entity at runtime, so the model names no texture of its own.
+// A single forward-facing quad, width pixels wide and one cell tall, centred on the model origin. It shows the leftmost
+// width columns of the glyph texture. The texture is chosen per entity at runtime, so the model names none of its own.
+function glyphModel(width) {
     return {
         nodes: [
             {
@@ -118,7 +119,7 @@ function glyphModel() {
                     type: 'quad',
                     offset: { x: 0, y: 0, z: 0 },
                     stretch: { x: 1, y: 1, z: 1 },
-                    settings: { isPiece: false, size: { x: CELL, y: CELL }, normal: '+Z', isStaticBox: true },
+                    settings: { isPiece: false, size: { x: width, y: CELL }, normal: '+Z', isStaticBox: true },
                     textureLayout: {
                         front: { offset: { x: 0, y: 0 }, mirror: { x: false, y: false }, angle: 0 },
                     },
@@ -134,7 +135,14 @@ function glyphModel() {
     };
 }
 
-function generateFont(font) {
+// Columns of the cell that hold a glyph's ink, from the pen origin and measured ink extent.
+function inkColumns(layout, m) {
+    const left = Math.max(0, Math.floor(layout.originX - m.actualBoundingBoxLeft));
+    const right = Math.min(CELL, Math.ceil(layout.originX + m.actualBoundingBoxRight));
+    return { left, width: Math.max(1, right - left) };
+}
+
+function generateFont(font, widths) {
     const family = `TextSigns ${font.name}`;
     if (!GlobalFonts.registerFromPath(font.file, family)) {
         throw new Error(`Failed to load font ${font.file}`);
@@ -153,11 +161,12 @@ function generateFont(font) {
         const inkDir = join(fontDir, ink.name);
         mkdirSync(inkDir, { recursive: true });
         for (const { code, char } of chars()) {
+            const columns = inkColumns(layout, layout.measured.glyphs.get(code));
             ctx.clearRect(0, 0, CELL, CELL);
             ctx.fillStyle = ink.colour;
             ctx.textBaseline = 'alphabetic';
             ctx.textAlign = 'left';
-            ctx.fillText(char, layout.originX, layout.baselineY);
+            ctx.fillText(char, layout.originX - columns.left, layout.baselineY);
             writeFileSync(join(inkDir, `Glyph_${pad3(code)}.png`), canvas.toBuffer('image/png'));
         }
     }
@@ -166,6 +175,10 @@ function generateFont(font) {
     for (const { code, char } of chars()) {
         const m = layout.measured.glyphs.get(code);
         const empty = char === ' ';
+        const columns = inkColumns(layout, m);
+        if (!empty) {
+            widths.add(columns.width);
+        }
         glyphs[code] = {
             char,
             advance: round2(m.width),
@@ -173,6 +186,9 @@ function generateFont(font) {
             inkLeft: empty ? 0 : round2(-m.actualBoundingBoxLeft),
             inkRight: empty ? 0 : round2(m.actualBoundingBoxRight),
             pixelWidth: empty ? 0 : round2(m.actualBoundingBoxLeft + m.actualBoundingBoxRight),
+            // The glyph's quad: its left edge relative to the pen position and its width, in pixels.
+            quadLeft: empty ? 0 : columns.left - layout.originX,
+            quadWidth: empty ? 0 : columns.width,
         };
     }
 
@@ -182,7 +198,8 @@ function generateFont(font) {
         cellWidth: CELL,
         cellHeight: CELL,
         fontSize: layout.size,
-        // Pen origin and baseline inside every cell, in pixels from the top-left corner.
+        // Pen origin and baseline inside the cell the glyphs were drawn in, in pixels from the top-left corner. Textures
+        // are shifted left by each glyph's quadLeft - originX, so only baselineY still applies to them.
         originX: layout.originX,
         baselineY: layout.baselineY,
         ascent: round2(fontMetrics.fontBoundingBoxAscent),
@@ -190,6 +207,7 @@ function generateFont(font) {
         lineHeight: round2(fontMetrics.fontBoundingBoxAscent + fontMetrics.fontBoundingBoxDescent),
         inks: INKS.map((ink) => ink.name),
         texturePattern: `Items/TextSigns/Fonts/${font.name}/{ink}/Glyph_{code}.png`,
+        modelPattern: 'Items/TextSigns/Glyph_W{width}.blockymodel',
         glyphs,
     };
 
@@ -200,10 +218,20 @@ function generateFont(font) {
     console.log(`${font.name}: ${layout.size}px in a ${CELL}px cell, origin (${layout.originX}, ${layout.baselineY}), ${INKS.length} inks`);
 }
 
+const widths = new Set();
 for (const font of FONTS) {
-    generateFont(font);
+    generateFont(font, widths);
 }
 
+// One quad model per glyph width in use, plus a full-cell quad that the glyph model asset names as its default.
 mkdirSync(COMMON_DIR, { recursive: true });
-writeFileSync(join(COMMON_DIR, 'Glyph.blockymodel'), JSON.stringify(glyphModel(), null, 2) + '\n');
-console.log(`Glyph model: ${CELL}x${CELL} quad`);
+for (const file of readdirSync(COMMON_DIR)) {
+    if (file.endsWith('.blockymodel')) {
+        rmSync(join(COMMON_DIR, file));
+    }
+}
+writeFileSync(join(COMMON_DIR, 'Glyph.blockymodel'), JSON.stringify(glyphModel(CELL), null, 2) + '\n');
+for (const width of widths) {
+    writeFileSync(join(COMMON_DIR, `Glyph_W${width}.blockymodel`), JSON.stringify(glyphModel(width), null, 2) + '\n');
+}
+console.log(`Glyph models: ${widths.size} widths, ${Math.min(...widths)} to ${Math.max(...widths)} pixels`);

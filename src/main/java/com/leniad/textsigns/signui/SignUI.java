@@ -14,6 +14,7 @@ import com.hypixel.hytale.server.core.ui.builder.EventData;
 import com.hypixel.hytale.server.core.ui.builder.UICommandBuilder;
 import com.hypixel.hytale.server.core.ui.builder.UIEventBuilder;
 import com.hypixel.hytale.server.core.universe.PlayerRef;
+import com.hypixel.hytale.server.core.universe.world.World;
 import com.hypixel.hytale.server.core.universe.world.storage.ChunkStore;
 import com.hypixel.hytale.server.core.universe.world.storage.EntityStore;
 import com.leniad.textsigns.interaction.TextSignBlock;
@@ -27,7 +28,13 @@ import java.util.UUID;
 public class SignUI extends InteractiveCustomUIPage<SignUI.PageData> {
     private static final int MAX_TEXT_LENGTH = 200;
 
+    private static final String ACTION_SAVE = "Save";
+
     private Vector3i interactedBlock;
+    // Text typed since the editor opened, shown on the sign as a preview until it is saved with Enter
+    @Nullable
+    private String pendingText;
+    private boolean saved;
 
     public SignUI(@Nonnull PlayerRef playerRef, @Nonnull CustomPageLifetime lifetime, Vector3i pos) {
         super(playerRef, lifetime, PageData.CODEC);
@@ -57,6 +64,8 @@ public class SignUI extends InteractiveCustomUIPage<SignUI.PageData> {
         }
 
         uiEventBuilder.addEventBinding(CustomUIEventBindingType.ValueChanged, "#TXTSSignInput", EventData.of("@SignText", "#TXTSSignInput.Value"), false);
+        // Enter in the text field saves and closes the editor
+        uiEventBuilder.addEventBinding(CustomUIEventBindingType.Validating, "#TXTSSignInput", EventData.of(PageData.KEY_ACTION, ACTION_SAVE).append("@SignText", "#TXTSSignInput.Value"), false);
         uiEventBuilder.addEventBinding(CustomUIEventBindingType.ValueChanged, "#TXTSCheckBox", EventData.of("@SignLocked", "#TXTSCheckBox.Value"), false);
 
     }
@@ -77,24 +86,60 @@ public class SignUI extends InteractiveCustomUIPage<SignUI.PageData> {
             return;
         }
 
+        if (data.signText != null && !signState.getIsLocked()) {
+            this.pendingText = data.signText.length() > MAX_TEXT_LENGTH ? data.signText.substring(0, MAX_TEXT_LENGTH) : data.signText;
+        }
+
+        if (ACTION_SAVE.equals(data.action)) {
+            savePendingText(signRef, signState);
+            this.saved = true;
+            this.close();
+            return;
+        }
+
         if (data.signText != null) {
-            if (!signState.getIsLocked()) {
-                String text = data.signText.length() > MAX_TEXT_LENGTH ? data.signText.substring(0, MAX_TEXT_LENGTH) : data.signText;
-                signState.setSignText(text);
-                TextSignBlock.markNeedsSaving(signRef);
-                // Redraws as the player types, which doubles as a live preview
-                SignTextRenderer.get().requestRefresh(store.getExternalData().getWorld(), signRef);
+            if (this.pendingText != null) {
+                SignTextRenderer.get().setPreview(store.getExternalData().getWorld(), signRef, this.pendingText);
             }
             return;
         }
 
         if (data.isLocked != signState.getIsLocked() && canChangeLock(ref, store, signRef)) {
+            // Locking keeps what has been typed so far, since the text can't be changed once locked
+            if (data.isLocked) {
+                savePendingText(signRef, signState);
+            }
             signState.setIsLocked(data.isLocked);
             TextSignBlock.markNeedsSaving(signRef);
             UICommandBuilder update = new UICommandBuilder();
             update.set("#TXTSSignInput.IsReadOnly", data.isLocked);
             this.sendUpdate(update, false);
         }
+    }
+
+    /**
+     * Closing the editor any other way than with Enter, such as with Esc, discards the text typed since it opened.
+     */
+    @Override
+    public void onDismiss(@Nonnull Ref<EntityStore> ref, @Nonnull Store<EntityStore> store) {
+        super.onDismiss(ref, store);
+        if (this.saved) {
+            return;
+        }
+        Ref<ChunkStore> signRef = getSignRef(store);
+        if (signRef != null) {
+            SignTextRenderer.get().clearPreview(store.getExternalData().getWorld(), signRef);
+        }
+    }
+
+    private void savePendingText(@Nonnull Ref<ChunkStore> signRef, @Nonnull TextSignBlock signState) {
+        World world = signRef.getStore().getExternalData().getWorld();
+        if (this.pendingText != null && !signState.getIsLocked()) {
+            signState.setSignText(this.pendingText);
+            TextSignBlock.markNeedsSaving(signRef);
+        }
+        this.pendingText = null;
+        SignTextRenderer.get().clearPreview(world, signRef);
     }
 
     @Nullable
@@ -133,15 +178,18 @@ public class SignUI extends InteractiveCustomUIPage<SignUI.PageData> {
     public static class PageData {
         static final String KEY_SIGN_TEXT = "@SignText";
         static final String KEY_LOCKED_TEXT = "@SignLocked";
+        static final String KEY_ACTION = "Action";
 
         public static final BuilderCodec<PageData> CODEC = BuilderCodec.builder(PageData.class, PageData::new)
                 .addField(new KeyedCodec<>(KEY_SIGN_TEXT, Codec.STRING), (data, s) -> data.signText = s, data -> data.signText)
                 .addField(new KeyedCodec<>(KEY_LOCKED_TEXT, Codec.BOOLEAN), (data, b) -> data.isLocked = b, data -> data.isLocked)
+                .addField(new KeyedCodec<>(KEY_ACTION, Codec.STRING), (data, a) -> data.action = a, data -> data.action)
                 .build();
 
 
         private String signText;
         private boolean isLocked;
+        private String action;
     }
 
 }

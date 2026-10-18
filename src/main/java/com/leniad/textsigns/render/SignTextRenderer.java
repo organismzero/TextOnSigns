@@ -48,14 +48,16 @@ public final class SignTextRenderer {
     private static final HytaleLogger LOGGER = HytaleLogger.forEnclosingClass();
 
     public static final String GLYPH_MODEL_ASSET_ID = "TextSigns_Glyph";
-    public static final String GLYPH_MODEL = "Items/TextSigns/Glyph.blockymodel";
     public static final String FONT = "Lexend";
 
     // Model units per block for entity models. Vanilla creature models are about 64 units per block of hitbox height,
     // while block models use 32. Confirm in the client: if glyphs are drawn at double or half size, change this.
     static final double ENTITY_MODEL_UNITS_PER_BLOCK = 64.0;
-    // Size of the glyph quad in model units, matching the glyph cell size in Glyph.blockymodel
+    // Height of the glyph quads in model units, matching the glyph cell height in the Glyph_W*.blockymodel files
     static final double GLYPH_QUAD_UNITS = 32.0;
+    // Entity models face the opposite way to block models: at the block's yaw, a glyph quad shows its back to the
+    // reader and its texture is mirrored. Turning it half a turn shows the front.
+    static final double GLYPH_YAW_OFFSET = Math.PI;
     // How far glyphs float in front of the face, in model pixels, so they don't z-fight with it
     static final double FACE_OFFSET = 0.25;
     // Extra depth added per glyph, in model pixels, so overlapping transparent glyph cells never share a plane
@@ -76,6 +78,7 @@ public final class SignTextRenderer {
     private final SignFaces faces;
     private final Map<Ref<ChunkStore>, List<Ref<EntityStore>>> glyphsBySign = new ConcurrentHashMap<>();
     private final Map<Ref<ChunkStore>, Long> pendingRefreshes = new ConcurrentHashMap<>();
+    private final Map<Ref<ChunkStore>, String> previews = new ConcurrentHashMap<>();
     private final AtomicLong refreshCounter = new AtomicLong();
 
     private SignTextRenderer(@Nonnull GlyphFont font, @Nonnull SignFaces faces) {
@@ -114,7 +117,24 @@ public final class SignTextRenderer {
     }
 
     /**
-     * Removes a sign's glyphs and draws its current text. Must be called on the world thread.
+     * Shows text on a sign without saving it, while a player edits it. The preview lasts until {@link #clearPreview}.
+     */
+    public void setPreview(@Nonnull World world, @Nonnull Ref<ChunkStore> signRef, @Nonnull String text) {
+        previews.put(signRef, text);
+        requestRefresh(world, signRef);
+    }
+
+    /**
+     * Ends a preview and redraws the sign's saved text.
+     */
+    public void clearPreview(@Nonnull World world, @Nonnull Ref<ChunkStore> signRef) {
+        previews.remove(signRef);
+        requestRefresh(world, signRef);
+    }
+
+    /**
+     * Removes a sign's glyphs and draws its current text, or its preview if one is showing. Must be called on the world
+     * thread.
      */
     public void render(@Nonnull World world, @Nonnull Ref<ChunkStore> signRef) {
         clear(signRef);
@@ -125,7 +145,8 @@ public final class SignTextRenderer {
         Store<ChunkStore> chunkStore = signRef.getStore();
         TextSignBlock sign = chunkStore.getComponent(signRef, TextSignBlock.getComponentType());
         BlockModule.BlockStateInfo info = chunkStore.getComponent(signRef, BlockModule.BlockStateInfo.getComponentType());
-        if (sign == null || info == null || sign.getSignText().isBlank()) {
+        String text = previews.getOrDefault(signRef, sign != null ? sign.getSignText() : "");
+        if (sign == null || info == null || text.isBlank()) {
             return;
         }
 
@@ -148,7 +169,7 @@ public final class SignTextRenderer {
         }
         RotationTuple rotation = blockSection.getRotation(info.getIndex());
 
-        TextLayout.Result layout = TextLayout.layout(sign.getSignText(), font, face.width(), face.height(), face.minLines(), face.maxLines());
+        TextLayout.Result layout = TextLayout.layout(text, font, face.width(), face.height(), face.minLines(), face.maxLines());
         if (layout.glyphs().isEmpty()) {
             return;
         }
@@ -182,6 +203,7 @@ public final class SignTextRenderer {
      */
     public void forget(@Nonnull World world, @Nonnull Ref<ChunkStore> signRef) {
         pendingRefreshes.remove(signRef);
+        previews.remove(signRef);
         if (glyphsBySign.containsKey(signRef)) {
             world.execute(() -> clear(signRef));
         }
@@ -203,12 +225,12 @@ public final class SignTextRenderer {
         double mirror = back ? -1 : 1;
         double faceZ = back ? face.backZ() : face.frontZ();
 
-        double cellBlocks = font.getCellWidth() * layout.scale() / SignFace.MODEL_PIXELS_PER_BLOCK;
+        double cellBlocks = font.getCellHeight() * layout.scale() / SignFace.MODEL_PIXELS_PER_BLOCK;
         float entityScale = (float) (cellBlocks * ENTITY_MODEL_UNITS_PER_BLOCK / GLYPH_QUAD_UNITS);
         double visibility = Math.max(cellBlocks, MIN_VISIBILITY_SIZE);
         Box hitbox = new Box(-HITBOX_HALF_WIDTH, 0, -HITBOX_HALF_WIDTH, HITBOX_HALF_WIDTH, visibility, HITBOX_HALF_WIDTH);
 
-        float yaw = (float) (rotation.yaw().getRadians() + (back ? Math.PI : 0));
+        float yaw = (float) (rotation.yaw().getRadians() + GLYPH_YAW_OFFSET + (back ? Math.PI : 0));
         Rotation3f glyphRotation = new Rotation3f(0, yaw, (float) (roll * mirror));
 
         List<TextLayout.PlacedGlyph> glyphs = layout.glyphs();
@@ -225,7 +247,7 @@ public final class SignTextRenderer {
             ).div(SignFace.MODEL_PIXELS_PER_BLOCK);
             Vector3d position = rotation.rotatedVector(local).add(blockPos.x + 0.5, blockPos.y, blockPos.z + 0.5);
 
-            Model model = glyphModel(font.texture(face.ink(), glyph.character()), entityScale, hitbox);
+            Model model = glyphModel(font.model(glyph.character()), font.texture(face.ink(), glyph.character()), entityScale, hitbox);
             spawned.add(spawnGlyph(store, model, position, glyphRotation));
         }
     }
@@ -243,9 +265,9 @@ public final class SignTextRenderer {
     }
 
     @Nonnull
-    private static Model glyphModel(@Nonnull String texture, float scale, @Nullable Box hitbox) {
+    private static Model glyphModel(@Nonnull String modelPath, @Nonnull String texture, float scale, @Nullable Box hitbox) {
         return new Model(
-                GLYPH_MODEL_ASSET_ID, scale, null, null, hitbox, GLYPH_MODEL, texture, null, null,
+                GLYPH_MODEL_ASSET_ID, scale, null, null, hitbox, modelPath, texture, null, null,
                 0, 0, 0, 0, null, null, null, null, null, null, null, Phobia.None, null
         );
     }
