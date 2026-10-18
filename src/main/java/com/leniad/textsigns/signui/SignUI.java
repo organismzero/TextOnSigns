@@ -21,6 +21,7 @@ import com.hypixel.hytale.server.core.universe.world.storage.EntityStore;
 import com.leniad.textsigns.interaction.TextSignBlock;
 import com.leniad.textsigns.render.SignColours;
 import com.leniad.textsigns.render.SignTextRenderer;
+import com.leniad.textsigns.render.TextLayout;
 import org.joml.Vector3i;
 
 import javax.annotation.Nonnull;
@@ -68,6 +69,7 @@ public class SignUI extends InteractiveCustomUIPage<SignUI.PageData> {
         uiCommandBuilder.set("#TXTSSignInput.Value", currentState.getSignText());
         uiCommandBuilder.set("#TXTSCheckBox.Value", currentState.getIsLocked());
         uiCommandBuilder.set("#TXTSColourName.Text", colourName(currentState.getColour()));
+        uiCommandBuilder.set("#TXTSLineBreakCode.Text", Message.translation("customUI.textSign.lineBreakCode").param("code", TextLayout.LINE_BREAK_CODE));
 
         if (currentState.getIsLocked()) {
             uiCommandBuilder.set("#TXTSSignInput.IsReadOnly", true);

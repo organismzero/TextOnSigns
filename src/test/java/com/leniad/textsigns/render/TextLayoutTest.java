@@ -86,6 +86,30 @@ class TextLayoutTest {
     }
 
     @Test
+    void lineBreakCodesStartNewLinesAndDropSpacesAroundThem() {
+        TextLayout.StyledText styled = TextLayout.clean("Hi \\n there\\n\\nend \\ ok");
+        assertEquals("Hi\nthere\n\nend \\ ok", styled.text());
+        assertEquals(List.of("Hi", "there", "", "end \\ ok"), TextLayout.wrap(styled.text(), FONT, 1000, false));
+    }
+
+    @Test
+    void lineBreaksForceShortWordsOntoSeparateLines() {
+        TextLayout.Result result = TextLayout.layout("&cA\\nB\\n\\nC", FONT, 24, 16, 2, 5);
+        assertEquals(4, result.lineCount());
+        assertEquals(3, result.glyphs().size());
+        TextLayout.PlacedGlyph a = result.glyphs().get(0);
+        TextLayout.PlacedGlyph b = result.glyphs().get(1);
+        TextLayout.PlacedGlyph c = result.glyphs().get(2);
+        assertEquals('A', a.character());
+        assertEquals('B', b.character());
+        assertEquals('C', c.character());
+        assertTrue(a.y() > b.y() && b.y() > c.y());
+        // Two line heights between B and C, for the empty line
+        assertEquals(2 * (a.y() - b.y()), b.y() - c.y(), 1e-9);
+        assertEquals(SignColours.RED, c.colour());
+    }
+
+    @Test
     void textThatNeverFitsIsTruncatedToMaxLines() {
         String text = "word ".repeat(200);
         TextLayout.Result result = TextLayout.layout(text, FONT, 24, 16, 2, 5);

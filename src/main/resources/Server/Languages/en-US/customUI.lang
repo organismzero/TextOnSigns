@@ -6,6 +6,7 @@ textSign.colourDefault = Default
 textSign.colourSelected = Colour: {colour}
 textSign.colourSelectedCode = Colour: {colour} (&{code})
 textSign.colourCodes = Type &0 to &f to colour the text after it, or &r to go back to the sign colour.
+textSign.lineBreakCode = Type {code} to start a new line.
 textSign.colours.Black = Black
 textSign.colours.DarkBlue = Dark Blue
 textSign.colours.DarkGreen = Dark Green

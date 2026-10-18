@@ -36,6 +36,10 @@ Signs can use the 16 Minecraft text colours.
 
 Colour changes are previewed and saved the same way as text: Enter or Save keeps them, and Esc discards them.
 
+### Line breaks
+
+Type `\n` to start a new line, for example `Welcome\nto the tavern`. Text still wraps and shrinks to fit within each line, and `\n\n` leaves an empty line. Any other backslash is shown as it is.
+
 Text wraps between words and shrinks to fit the sign, using up to five lines. Hanging and standing signs show the text on both sides; wall signs show it on the front only.
 
 ## Supported signs
@@ -75,7 +79,7 @@ The Under Construction sign and the prototype signs can't be crafted or written 
 ## Limitations
 
 - Signs show printable ASCII characters only. Any other character is shown as `?`.
-- Text is limited to 200 characters, including colour codes, and text that doesn't fit in five lines is cut off.
+- Text is limited to 200 characters, including colour and line break codes, and text that doesn't fit in five lines is cut off.
 - Each character on a sign is a small entity, so a sign full of text adds a few hundred entities to its chunk.
 
 ## Building
