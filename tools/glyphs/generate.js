@@ -12,6 +12,7 @@ import { createCanvas, GlobalFonts } from '@napi-rs/canvas';
 import { copyFileSync, mkdirSync, readdirSync, rmSync, writeFileSync } from 'node:fs';
 import { dirname, join } from 'node:path';
 import { fileURLToPath } from 'node:url';
+import { deflateSync } from 'node:zlib';
 
 const HERE = dirname(fileURLToPath(import.meta.url));
 const RESOURCES = join(HERE, '..', '..', 'src', 'main', 'resources');
@@ -125,6 +126,67 @@ function fitLayout(ctx, family) {
 
 // A single forward-facing quad, width pixels wide and one cell tall, centred on the model origin. It shows the leftmost
 // width columns of the glyph texture. The texture is chosen per entity at runtime, so the model names none of its own.
+// Writes an 8-bit RGBA PNG. Used instead of the canvas's own encoder, which stores colours premultiplied by alpha and
+// so gives nearly transparent edge pixels near-random colours (often white) when it converts them back.
+function encodePng(width, height, rgba) {
+    const crcTable = Array.from({ length: 256 }, (_, n) => {
+        let c = n;
+        for (let k = 0; k < 8; k++) {
+            c = c & 1 ? 0xedb88320 ^ (c >>> 1) : c >>> 1;
+        }
+        return c >>> 0;
+    });
+    const crc32 = (bytes) => {
+        let c = 0xffffffff;
+        for (const b of bytes) {
+            c = crcTable[(c ^ b) & 0xff] ^ (c >>> 8);
+        }
+        return (c ^ 0xffffffff) >>> 0;
+    };
+    const chunk = (type, data) => {
+        const length = Buffer.alloc(4);
+        length.writeUInt32BE(data.length);
+        const body = Buffer.concat([Buffer.from(type, 'ascii'), data]);
+        const crc = Buffer.alloc(4);
+        crc.writeUInt32BE(crc32(body));
+        return Buffer.concat([length, body, crc]);
+    };
+
+    const header = Buffer.alloc(13);
+    header.writeUInt32BE(width, 0);
+    header.writeUInt32BE(height, 4);
+    header[8] = 8; // bit depth
+    header[9] = 6; // colour type: RGBA
+    // Each row starts with filter type 0 (none)
+    const raw = Buffer.alloc(height * (width * 4 + 1));
+    for (let y = 0; y < height; y++) {
+        Buffer.from(rgba.buffer, rgba.byteOffset + y * width * 4, width * 4).copy(raw, y * (width * 4 + 1) + 1);
+    }
+    return Buffer.concat([
+        Buffer.from([0x89, 0x50, 0x4e, 0x47, 0x0d, 0x0a, 0x1a, 0x0a]),
+        chunk('IHDR', header),
+        chunk('IDAT', deflateSync(raw, { level: 9 })),
+        chunk('IEND', Buffer.alloc(0)),
+    ]);
+}
+
+// The glyph's coverage from the canvas, painted in exactly one colour. Every pixel, including fully transparent ones,
+// gets the ink's colour, so neither edge pixels nor texture filtering can bring in another colour.
+function glyphPixels(ctx, colour) {
+    const r = parseInt(colour.slice(1, 3), 16);
+    const g = parseInt(colour.slice(3, 5), 16);
+    const b = parseInt(colour.slice(5, 7), 16);
+    const pixels = ctx.getImageData(0, 0, CELL, CELL).data;
+    const out = new Uint8Array(pixels.length);
+    for (let i = 0; i < pixels.length; i += 4) {
+        out[i] = r;
+        out[i + 1] = g;
+        out[i + 2] = b;
+        out[i + 3] = pixels[i + 3];
+    }
+    return out;
+}
+
 function glyphModel(width) {
     return {
         nodes: [
@@ -185,7 +247,7 @@ function generateFont(font, widths) {
             ctx.textBaseline = 'alphabetic';
             ctx.textAlign = 'left';
             ctx.fillText(char, layout.originX - columns.left, layout.baselineY);
-            writeFileSync(join(inkDir, `Glyph_${pad3(code)}.png`), canvas.toBuffer('image/png'));
+            writeFileSync(join(inkDir, `Glyph_${pad3(code)}.png`), encodePng(CELL, CELL, glyphPixels(ctx, ink.colour)));
         }
     }
 
