@@ -18,7 +18,7 @@ import javax.annotation.Nonnull;
 
 /**
  * @author Daniel Novaes Dias
- * @version 1.0.0
+ * @version 2.0.0
  */
 public class TextSigns extends JavaPlugin {
 
