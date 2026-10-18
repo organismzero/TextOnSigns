@@ -2,7 +2,7 @@
   "Group": "organismzero",
   "Name": "TextSigns",
   "Version": "${version}",
-  "Description": "A Hytale plugin that enables you to write to signs and see their texts within a popup.",
+  "Description": "Write on signs and have the text drawn on the sign face, visible to every player.",
   "Authors": [
     {
       "Name": "Daniel Novaes Dias",
