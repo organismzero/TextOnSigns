@@ -4,6 +4,7 @@ import org.junit.jupiter.api.Test;
 
 import java.util.List;
 
+import static org.junit.jupiter.api.Assertions.assertArrayEquals;
 import static org.junit.jupiter.api.Assertions.assertEquals;
 import static org.junit.jupiter.api.Assertions.assertNull;
 import static org.junit.jupiter.api.Assertions.assertTrue;
@@ -13,8 +14,31 @@ class TextLayoutTest {
 
     @Test
     void cleanCollapsesWhitespaceAndReplacesUnsupportedCharacters() {
-        assertEquals("Hello world", TextLayout.clean("  Hello \t\n world  "));
-        assertEquals("Caf? ?", TextLayout.clean("Café 😀"));
+        assertEquals("Hello world", TextLayout.clean("  Hello \t\n world  ").text());
+        assertEquals("Caf? ?", TextLayout.clean("Café 😀").text());
+    }
+
+    @Test
+    void colourCodesColourTheTextAfterThemAndAreRemoved() {
+        TextLayout.StyledText styled = TextLayout.clean("a&cbc&rd&9E");
+        assertEquals("abcdE", styled.text());
+        assertArrayEquals(new SignColours[]{null, SignColours.RED, SignColours.RED, null, SignColours.BLUE}, styled.colours());
+    }
+
+    @Test
+    void formattingCodesAreRemovedAndOtherAmpersandsKept() {
+        TextLayout.StyledText styled = TextLayout.clean("&lBold & co&");
+        assertEquals("Bold & co&", styled.text());
+    }
+
+    @Test
+    void glyphsKeepTheirColourAcrossLineBreaks() {
+        TextLayout.Result result = TextLayout.layout("&cOrganism's &9Sign", FONT, 22, 18, 2, 5);
+        assertEquals(2, result.lineCount());
+        for (TextLayout.PlacedGlyph glyph : result.glyphs()) {
+            SignColours expected = "Sign".indexOf(glyph.character()) >= 0 && glyph.y() < 0 ? SignColours.BLUE : SignColours.RED;
+            assertEquals(expected, glyph.colour(), "colour of " + glyph);
+        }
     }
 
     @Test

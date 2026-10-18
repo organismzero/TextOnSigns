@@ -7,6 +7,7 @@ import com.hypixel.hytale.component.Ref;
 import com.hypixel.hytale.component.Store;
 import com.hypixel.hytale.protocol.packets.interface_.CustomPageLifetime;
 import com.hypixel.hytale.protocol.packets.interface_.CustomUIEventBindingType;
+import com.hypixel.hytale.server.core.Message;
 import com.hypixel.hytale.server.core.entity.entities.player.pages.InteractiveCustomUIPage;
 import com.hypixel.hytale.server.core.modules.block.BlockModule;
 import com.hypixel.hytale.server.core.modules.interaction.components.PlacedByInteractionComponent;
@@ -18,6 +19,7 @@ import com.hypixel.hytale.server.core.universe.world.World;
 import com.hypixel.hytale.server.core.universe.world.storage.ChunkStore;
 import com.hypixel.hytale.server.core.universe.world.storage.EntityStore;
 import com.leniad.textsigns.interaction.TextSignBlock;
+import com.leniad.textsigns.render.SignColours;
 import com.leniad.textsigns.render.SignTextRenderer;
 import org.joml.Vector3i;
 
@@ -29,11 +31,18 @@ public class SignUI extends InteractiveCustomUIPage<SignUI.PageData> {
     private static final int MAX_TEXT_LENGTH = 200;
 
     private static final String ACTION_SAVE = "Save";
+    private static final String ACTION_COLOUR = "Colour";
+    // Colour event value for the sign type's default ink
+    private static final String COLOUR_DEFAULT = "Default";
 
     private Vector3i interactedBlock;
     // Text typed since the editor opened, shown on the sign as a preview until it is saved with Enter
     @Nullable
     private String pendingText;
+    // Sign colour chosen since the editor opened, previewed and saved the same way as the text
+    @Nullable
+    private SignColours pendingColour;
+    private boolean colourChanged;
     private boolean saved;
 
     public SignUI(@Nonnull PlayerRef playerRef, @Nonnull CustomPageLifetime lifetime, Vector3i pos) {
@@ -58,6 +67,7 @@ public class SignUI extends InteractiveCustomUIPage<SignUI.PageData> {
 
         uiCommandBuilder.set("#TXTSSignInput.Value", currentState.getSignText());
         uiCommandBuilder.set("#TXTSCheckBox.Value", currentState.getIsLocked());
+        uiCommandBuilder.set("#TXTSColourName.Text", colourName(currentState.getColour()));
 
         if (currentState.getIsLocked()) {
             uiCommandBuilder.set("#TXTSSignInput.IsReadOnly", true);
@@ -68,6 +78,10 @@ public class SignUI extends InteractiveCustomUIPage<SignUI.PageData> {
         uiEventBuilder.addEventBinding(CustomUIEventBindingType.Validating, "#TXTSSignInput", EventData.of(PageData.KEY_ACTION, ACTION_SAVE).append("@SignText", "#TXTSSignInput.Value"), false);
         uiEventBuilder.addEventBinding(CustomUIEventBindingType.Activating, "#TXTSSaveButton", EventData.of(PageData.KEY_ACTION, ACTION_SAVE).append("@SignText", "#TXTSSignInput.Value"), false);
         uiEventBuilder.addEventBinding(CustomUIEventBindingType.ValueChanged, "#TXTSCheckBox", EventData.of("@SignLocked", "#TXTSCheckBox.Value"), false);
+        uiEventBuilder.addEventBinding(CustomUIEventBindingType.Activating, "#TXTSColourDefault", EventData.of(PageData.KEY_ACTION, ACTION_COLOUR).append(PageData.KEY_COLOUR, COLOUR_DEFAULT), false);
+        for (SignColours colour : SignColours.values()) {
+            uiEventBuilder.addEventBinding(CustomUIEventBindingType.Activating, "#TXTSColour" + colour.ink(), EventData.of(PageData.KEY_ACTION, ACTION_COLOUR).append(PageData.KEY_COLOUR, colour.ink()), false);
+        }
 
     }
 
@@ -98,14 +112,26 @@ public class SignUI extends InteractiveCustomUIPage<SignUI.PageData> {
             return;
         }
 
-        if (data.signText != null) {
-            if (this.pendingText != null) {
-                SignTextRenderer.get().setPreview(store.getExternalData().getWorld(), signRef, this.pendingText);
+        if (ACTION_COLOUR.equals(data.action)) {
+            if (!signState.getIsLocked()) {
+                this.pendingColour = SignColours.fromInk(data.colour);
+                this.colourChanged = true;
+                UICommandBuilder update = new UICommandBuilder();
+                update.set("#TXTSColourName.Text", colourName(this.pendingColour));
+                this.sendUpdate(update, false);
+                showPreview(signRef, signState);
             }
             return;
         }
 
-        if (data.isLocked != signState.getIsLocked() && canChangeLock(ref, store, signRef)) {
+        if (data.signText != null) {
+            if (this.pendingText != null) {
+                showPreview(signRef, signState);
+            }
+            return;
+        }
+
+        if (data.isLocked != null && data.isLocked != signState.getIsLocked() && canChangeLock(ref, store, signRef)) {
             // Locking keeps what has been typed so far, since the text can't be changed once locked
             if (data.isLocked) {
                 savePendingText(signRef, signState);
@@ -119,7 +145,8 @@ public class SignUI extends InteractiveCustomUIPage<SignUI.PageData> {
     }
 
     /**
-     * Closing the editor any other way than with Enter, such as with Esc, discards the text typed since it opened.
+     * Closing the editor any other way than with Enter or Save, such as with Esc, discards the text and colour chosen
+     * since it opened.
      */
     @Override
     public void onDismiss(@Nonnull Ref<EntityStore> ref, @Nonnull Store<EntityStore> store) {
@@ -135,12 +162,40 @@ public class SignUI extends InteractiveCustomUIPage<SignUI.PageData> {
 
     private void savePendingText(@Nonnull Ref<ChunkStore> signRef, @Nonnull TextSignBlock signState) {
         World world = signRef.getStore().getExternalData().getWorld();
-        if (this.pendingText != null && !signState.getIsLocked()) {
-            signState.setSignText(this.pendingText);
-            TextSignBlock.markNeedsSaving(signRef);
+        if (!signState.getIsLocked()) {
+            if (this.pendingText != null) {
+                signState.setSignText(this.pendingText);
+            }
+            if (this.colourChanged) {
+                signState.setColour(this.pendingColour);
+            }
+            if (this.pendingText != null || this.colourChanged) {
+                TextSignBlock.markNeedsSaving(signRef);
+            }
         }
         this.pendingText = null;
+        this.pendingColour = null;
+        this.colourChanged = false;
         SignTextRenderer.get().clearPreview(world, signRef);
+    }
+
+    /**
+     * Shows the unsaved text and colour on the sign.
+     */
+    private void showPreview(@Nonnull Ref<ChunkStore> signRef, @Nonnull TextSignBlock signState) {
+        String text = this.pendingText != null ? this.pendingText : signState.getSignText();
+        SignColours colour = this.colourChanged ? this.pendingColour : signState.getColour();
+        SignTextRenderer.get().setPreview(signRef.getStore().getExternalData().getWorld(), signRef, text, colour);
+    }
+
+    @Nonnull
+    private static Message colourName(@Nullable SignColours colour) {
+        if (colour == null) {
+            return Message.translation("customUI.textSign.colourSelected").param("colour", Message.translation("customUI.textSign.colourDefault"));
+        }
+        return Message.translation("customUI.textSign.colourSelectedCode")
+                .param("colour", Message.translation("customUI.textSign.colours." + colour.ink()))
+                .param("code", String.valueOf(colour.code()));
     }
 
     @Nullable
@@ -180,17 +235,21 @@ public class SignUI extends InteractiveCustomUIPage<SignUI.PageData> {
         static final String KEY_SIGN_TEXT = "@SignText";
         static final String KEY_LOCKED_TEXT = "@SignLocked";
         static final String KEY_ACTION = "Action";
+        static final String KEY_COLOUR = "Colour";
 
         public static final BuilderCodec<PageData> CODEC = BuilderCodec.builder(PageData.class, PageData::new)
                 .addField(new KeyedCodec<>(KEY_SIGN_TEXT, Codec.STRING), (data, s) -> data.signText = s, data -> data.signText)
                 .addField(new KeyedCodec<>(KEY_LOCKED_TEXT, Codec.BOOLEAN), (data, b) -> data.isLocked = b, data -> data.isLocked)
                 .addField(new KeyedCodec<>(KEY_ACTION, Codec.STRING), (data, a) -> data.action = a, data -> data.action)
+                .addField(new KeyedCodec<>(KEY_COLOUR, Codec.STRING), (data, c) -> data.colour = c, data -> data.colour)
                 .build();
 
 
         private String signText;
-        private boolean isLocked;
+        // Null when the event isn't from the lock checkbox
+        private Boolean isLocked;
         private String action;
+        private String colour;
     }
 
 }

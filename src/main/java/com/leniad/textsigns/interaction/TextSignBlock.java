@@ -16,6 +16,7 @@ import com.hypixel.hytale.server.core.universe.world.chunk.section.BlockComponen
 import com.hypixel.hytale.server.core.universe.world.chunk.section.BlockSection;
 import com.hypixel.hytale.server.core.universe.world.storage.ChunkStore;
 import com.leniad.textsigns.TextSigns;
+import com.leniad.textsigns.render.SignColours;
 
 import javax.annotation.Nonnull;
 import javax.annotation.Nullable;
@@ -30,10 +31,15 @@ public class TextSignBlock implements Component<ChunkStore> {
             .add()
             .<Boolean>append(new KeyedCodec<>("IsLocked", Codec.BOOLEAN), (sign, locked) -> sign.isLocked = locked, sign -> sign.isLocked)
             .add()
+            .append(new KeyedCodec<>("Colour", Codec.STRING), (sign, colour) -> sign.colour = colour, sign -> sign.colour)
+            .add()
             .build();
 
     private String text = "";
     private boolean isLocked;
+    // Ink name of the sign's text colour, from SignColours, or null for the sign type's default ink
+    @Nullable
+    private String colour;
 
     public static ComponentType<ChunkStore, TextSignBlock> getComponentType() {
         return TextSigns.getInstance().getTextSignComponentType();
@@ -42,9 +48,10 @@ public class TextSignBlock implements Component<ChunkStore> {
     public TextSignBlock() {
     }
 
-    public TextSignBlock(String text, boolean isLocked) {
+    public TextSignBlock(String text, boolean isLocked, @Nullable String colour) {
         this.text = text;
         this.isLocked = isLocked;
+        this.colour = colour;
     }
 
     public String getSignText() {
@@ -53,6 +60,18 @@ public class TextSignBlock implements Component<ChunkStore> {
 
     public void setSignText(String text) {
         this.text = text;
+    }
+
+    /**
+     * The sign's text colour, or null for the sign type's default ink.
+     */
+    @Nullable
+    public SignColours getColour() {
+        return SignColours.fromInk(colour);
+    }
+
+    public void setColour(@Nullable SignColours colour) {
+        this.colour = colour != null ? colour.ink() : null;
     }
 
     public boolean getIsLocked() {
@@ -114,12 +133,12 @@ public class TextSignBlock implements Component<ChunkStore> {
     @Nonnull
     @Override
     public String toString() {
-        return "TextSignBlock{text=" + this.text + ", isLocked=" + this.isLocked + "}";
+        return "TextSignBlock{text=" + this.text + ", isLocked=" + this.isLocked + ", colour=" + this.colour + "}";
     }
 
     @Nonnull
     @Override
     public Component<ChunkStore> clone() {
-        return new TextSignBlock(this.text, this.isLocked);
+        return new TextSignBlock(this.text, this.isLocked, this.colour);
     }
 }

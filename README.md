@@ -25,6 +25,17 @@ This is a fork of [TextSigns by Daniel Novaes Dias](https://github.com/DanielNov
 - Tick Lock Sign to stop anyone changing the text. Only the player who placed the sign can lock or unlock it. Signs placed by world generation can be locked by anyone.
 - Breaking a sign removes its text.
 
+### Colours
+
+Signs can use the 16 Minecraft text colours.
+
+- Click a swatch in the editor to colour the whole sign, or Default to use the sign's own ink.
+- Type a colour code to colour the text after it: `&0` black, `&1` dark blue, `&2` dark green, `&3` dark aqua, `&4` dark red, `&5` dark purple, `&6` gold, `&7` grey, `&8` dark grey, `&9` blue, `&a` green, `&b` aqua, `&c` red, `&d` light purple, `&e` yellow, `&f` white.
+- `&r` goes back to the sign's colour. For example, `&cDanger &rkeep out` shows "Danger" in red and "keep out" in the sign's colour.
+- Minecraft's formatting codes (`&k` to `&o`, such as bold) aren't supported and are removed. Any other `&` is shown as it is.
+
+Colour changes are previewed and saved the same way as text: Enter or Save keeps them, and Esc discards them.
+
 Text wraps between words and shrinks to fit the sign, using up to five lines. Hanging and standing signs show the text on both sides; wall signs show it on the front only.
 
 ## Supported signs
@@ -64,7 +75,7 @@ The Under Construction sign and the prototype signs can't be crafted or written 
 ## Limitations
 
 - Signs show printable ASCII characters only. Any other character is shown as `?`.
-- Text is limited to 200 characters, and text that doesn't fit in five lines is cut off.
+- Text is limited to 200 characters, including colour codes, and text that doesn't fit in five lines is cut off.
 - Each character on a sign is a small entity, so a sign full of text adds a few hundred entities to its chunk.
 
 ## Building

@@ -78,8 +78,14 @@ public final class SignTextRenderer {
     private final SignFaces faces;
     private final Map<Ref<ChunkStore>, List<Ref<EntityStore>>> glyphsBySign = new ConcurrentHashMap<>();
     private final Map<Ref<ChunkStore>, Long> pendingRefreshes = new ConcurrentHashMap<>();
-    private final Map<Ref<ChunkStore>, String> previews = new ConcurrentHashMap<>();
+    private final Map<Ref<ChunkStore>, Preview> previews = new ConcurrentHashMap<>();
     private final AtomicLong refreshCounter = new AtomicLong();
+
+    /**
+     * Unsaved text and colour shown on a sign while a player edits it. colour is null for the sign type's default ink.
+     */
+    private record Preview(@Nonnull String text, @Nullable SignColours colour) {
+    }
 
     private SignTextRenderer(@Nonnull GlyphFont font, @Nonnull SignFaces faces) {
         this.font = font;
@@ -117,10 +123,11 @@ public final class SignTextRenderer {
     }
 
     /**
-     * Shows text on a sign without saving it, while a player edits it. The preview lasts until {@link #clearPreview}.
+     * Shows text and a sign colour without saving them, while a player edits the sign. The preview lasts until
+     * {@link #clearPreview}.
      */
-    public void setPreview(@Nonnull World world, @Nonnull Ref<ChunkStore> signRef, @Nonnull String text) {
-        previews.put(signRef, text);
+    public void setPreview(@Nonnull World world, @Nonnull Ref<ChunkStore> signRef, @Nonnull String text, @Nullable SignColours colour) {
+        previews.put(signRef, new Preview(text, colour));
         requestRefresh(world, signRef);
     }
 
@@ -145,8 +152,13 @@ public final class SignTextRenderer {
         Store<ChunkStore> chunkStore = signRef.getStore();
         TextSignBlock sign = chunkStore.getComponent(signRef, TextSignBlock.getComponentType());
         BlockModule.BlockStateInfo info = chunkStore.getComponent(signRef, BlockModule.BlockStateInfo.getComponentType());
-        String text = previews.getOrDefault(signRef, sign != null ? sign.getSignText() : "");
-        if (sign == null || info == null || text.isBlank()) {
+        if (sign == null || info == null) {
+            return;
+        }
+        Preview preview = previews.get(signRef);
+        String text = preview != null ? preview.text() : sign.getSignText();
+        SignColours signColour = preview != null ? preview.colour() : sign.getColour();
+        if (text.isBlank()) {
             return;
         }
 
@@ -176,9 +188,11 @@ public final class SignTextRenderer {
 
         Store<EntityStore> entityStore = world.getEntityStore().getStore();
         List<Ref<EntityStore>> spawned = new ArrayList<>();
-        spawnFace(entityStore, spawned, layout, face, blockPos, rotation, false);
+        // Text without a colour code uses the sign's colour, or the sign type's default ink
+        String signInk = signColour != null ? signColour.ink() : face.ink();
+        spawnFace(entityStore, spawned, layout, face, signInk, blockPos, rotation, false);
         if (face.backZ() != null) {
-            spawnFace(entityStore, spawned, layout, face, blockPos, rotation, true);
+            spawnFace(entityStore, spawned, layout, face, signInk, blockPos, rotation, true);
         }
         glyphsBySign.put(signRef, spawned);
     }
@@ -214,6 +228,7 @@ public final class SignTextRenderer {
             @Nonnull List<Ref<EntityStore>> spawned,
             @Nonnull TextLayout.Result layout,
             @Nonnull SignFace face,
+            @Nonnull String signInk,
             @Nonnull Vector3i blockPos,
             @Nonnull RotationTuple rotation,
             boolean back
@@ -247,7 +262,8 @@ public final class SignTextRenderer {
             ).div(SignFace.MODEL_PIXELS_PER_BLOCK);
             Vector3d position = rotation.rotatedVector(local).add(blockPos.x + 0.5, blockPos.y, blockPos.z + 0.5);
 
-            Model model = glyphModel(font.model(glyph.character()), font.texture(face.ink(), glyph.character()), entityScale, hitbox);
+            String ink = glyph.colour() != null ? glyph.colour().ink() : signInk;
+            Model model = glyphModel(font.model(glyph.character()), font.texture(ink, glyph.character()), entityScale, hitbox);
             spawned.add(spawnGlyph(store, model, position, glyphRotation));
         }
     }
