@@ -30,7 +30,7 @@ public class TextSigns extends JavaPlugin {
         super(init);
         instance = this;
         var logger = getLogger();
-        logger.atInfo().log("[SignText] Loaded");
+        logger.atInfo().log("Loaded");
     }
 
     @Override
@@ -39,7 +39,7 @@ public class TextSigns extends JavaPlugin {
 
         this.textSignComponentType = this.getChunkStoreRegistry().registerComponent(TextSignBlock.class, "TextSign", TextSignBlock.CODEC);
         SignTextRenderer renderer = SignTextRenderer.init();
-        getLogger().atInfo().log("[SignText] Text areas defined for %d sign types", renderer.faceCount());
+        getLogger().atInfo().log("Text areas defined for %d sign types", renderer.faceCount());
         this.getChunkStoreRegistry().registerSystem(new SignTextSystem());
         this.getCodecRegistry(OpenCustomUIInteraction.PAGE_CODEC).register("TextSign_UI", SignUISupplier.class, SignUISupplier.CODEC);
         this.getCodecRegistry(Interaction.CODEC).register("SignInteraction", SignInteraction.class, SignInteraction.CODEC);

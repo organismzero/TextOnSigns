@@ -1,6 +1,6 @@
 {
   "Group": "organismzero",
-  "Name": "TextSigns",
+  "Name": "TextOnSigns",
   "Version": "${version}",
   "Description": "Write on signs and have the text drawn on the sign face, visible to every player.",
   "Authors": [
@@ -12,10 +12,10 @@
     {
       "Name": "OrganismZero",
       "Email": "hello@organismzero.com",
-      "Url": "https://github.com/organismzero/TextSigns"
+      "Url": "https://github.com/organismzero/TextOnSigns"
     }
   ],
-  "Website": "https://github.com/organismzero/TextSigns",
+  "Website": "https://github.com/organismzero/TextOnSigns",
   "Main": "com.leniad.textsigns.TextSigns",
   "ServerVersion": "~0.7.0",
   "Dependencies": {},

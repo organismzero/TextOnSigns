@@ -1,6 +1,6 @@
-# TextSigns
+# TextOnSigns
 
-![TextSigns logo](src/main/resources/Common/UI/TextSigns-Danger-Enter-at-own-risk.jpg "TextSigns")
+![A sign reading "!DANGER!" in red above "Enter at own risk"](src/main/resources/Common/UI/TextSigns-Danger-Enter-at-own-risk.jpg "TextOnSigns")
 
 A Hytale server plugin that lets players write on signs. The text is drawn on the face of the sign, so every player can read it just by looking at the sign.
 
@@ -13,7 +13,7 @@ This is a fork of [TextSigns by Daniel Novaes Dias](https://github.com/DanielNov
 
 ## Installing
 
-1. Download `TextSigns-<version>.jar` from the [releases page](https://github.com/organismzero/TextSigns/releases), or build it yourself (see below).
+1. Download `TextOnSigns-<version>.jar` from the [releases page](https://github.com/organismzero/TextOnSigns/releases), or build it yourself (see below).
 2. Put the jar in the server's `mods` folder.
 3. Restart the server.
 
@@ -100,4 +100,4 @@ Every push to `main` builds the plugin and runs the tests on GitHub Actions. Whe
 
 ## Licence
 
-TextSigns is released under the MIT Licence; see [LICENSE](LICENSE). The Lexend font and the glyph textures generated from it are under the SIL Open Font Licence 1.1; see [`tools/glyphs/fonts/Lexend/OFL.txt`](tools/glyphs/fonts/Lexend/OFL.txt).
+TextOnSigns is released under the MIT Licence; see [LICENSE](LICENSE). The Lexend font and the glyph textures generated from it are under the SIL Open Font Licence 1.1; see [`tools/glyphs/fonts/Lexend/OFL.txt`](tools/glyphs/fonts/Lexend/OFL.txt).

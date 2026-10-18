@@ -1,4 +1,4 @@
-// Generates the glyph textures, glyph metrics and glyph quad model that TextSigns uses to draw text on signs.
+// Generates the glyph textures, glyph metrics and glyph quad model that TextOnSigns uses to draw text on signs.
 //
 // Usage (from tools/glyphs): npm install && npm run generate
 //

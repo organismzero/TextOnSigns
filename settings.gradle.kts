@@ -1,1 +1,1 @@
-rootProject.name = "TextSigns"
+rootProject.name = "TextOnSigns"

@@ -1,6 +1,6 @@
 # Glyph generator
 
-Generates the assets TextSigns uses to draw text on sign faces:
+Generates the assets TextOnSigns uses to draw text on sign faces:
 
 - `src/main/resources/Common/Items/TextSigns/Fonts/<Font>/<Ink>/Glyph_<code>.png`: one 32 × 32 texture per printable ASCII character, left aligned, (codes 32 to 126) for each ink colour.
 - `src/main/resources/Common/Items/TextSigns/Glyph_W<width>.blockymodel`: one quad model for each glyph width in use, one cell tall. Each glyph entity uses the quad as wide as its glyph, with its own texture. `Glyph.blockymodel` is a full-cell quad that the `TextSigns_Glyph` model asset names as its default.
