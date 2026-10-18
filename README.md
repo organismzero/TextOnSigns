@@ -1,6 +1,6 @@
 # TextOnSigns
 
-![A sign reading "!DANGER!" in red above "Enter at own risk"](src/main/resources/Common/UI/TextSigns-Danger-Enter-at-own-risk.jpg "TextOnSigns")
+![A sign reading "!DANGER!" in red above "Enter at own risk"](docs/images/TextOnSigns-Danger-Enter-at-own-risk.jpg "TextOnSigns")
 
 A Hytale server plugin that lets players write on signs. The text is drawn on the face of the sign, so every player can read it just by looking at the sign.
 
